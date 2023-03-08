@@ -1,0 +1,23 @@
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
+    padding: 10px; 
+    background-color: #2d2d2d; 
+}
+
+.nav-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 5px; 
+    border-radius: 1rem; 
+
+    background-color: aqua;
+}
+
+.nav-section li {
+    list-style-type: none; 
+}
