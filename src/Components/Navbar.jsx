@@ -8,6 +8,8 @@ import { auth, db } from "../firebase-config";
 import { httpsCallable, getFunctions } from "firebase/functions";
 import { getAuth, createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword} from "firebase/auth"; 
 
+import GetUserBalance from "../Functions/GetBalance";
+
 //Style:
 import LogIn from "./LogIn";
 import CreateAccount from "./CreateAccount";

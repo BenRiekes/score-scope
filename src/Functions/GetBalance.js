@@ -25,25 +25,26 @@ const GetUserBalance = async (address, toUSD) => {
 
     const network = "goerli";
     const alchemyKey = "-j_EMb6mI2xbZMkcSOgXF-R34u_RpYv-"; 
-    const provider = new ethers.provider.AlchemyProvider(network, alchemyKey); 
+    const provider = new ethers.AlchemyProvider(network, alchemyKey); 
 
     let userBalance; 
 
     if (address) {
 
-        provider.getBalance(address).then((balance) => {
+        await provider.getBalance(address).then((balance) => {
 
-            let balanceInEth = ethers.utils.formatEther(balance);
+            let balanceInEth = ethers.formatEther(balance);
             userBalance = balanceInEth.toString().substring(0, 4);
+
+            if (toUSD) {
+                return {ETH: userBalance, USD: GetUSDBalance(parseInt(userBalance))}
+            } 
 
         }).catch (error => {
             console.log("An error occured " + error); 
         });
         
-        if (toUSD) {
-            return {ETH: userBalance, USD: GetUSDBalance(parseInt(userBalance))}
-        } 
-
+        
     } else {
         userBalance = '?'
     }
