@@ -40,10 +40,6 @@ export default function NavBar() {
             }
         });
 
-        let toUSD = true; 
-
-        console.log(GetUserBalance("0x5E8561573595a012b0a5b01ef66e4bcDF624Dd7F", toUSD));
-
         return (loggedIn()); 
     },[]);
     
@@ -52,12 +48,17 @@ export default function NavBar() {
 
     const LogOut = async () => {
 
+        if (!auth.currentUser) {
+            alert("Can not log out when you are not logged in"); 
+            return; 
+        }
+
         signOut(auth).then(() => {
             window.location.reload(); 
 
         }).catch ((error) => {
             console.log("An error occcured while logging out" + error); 
-        })
+        });
     }   
 
     
@@ -115,7 +116,6 @@ export default function NavBar() {
         <div className = "nav">
 
             
-
             <div className = "nav-section">
                 <SignAction/>
                 <Button rightIcon = {<Icon path = {mdiWalletPlus} size = {1}/>}>Deposit</Button>
