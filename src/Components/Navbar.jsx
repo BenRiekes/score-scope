@@ -40,6 +40,10 @@ export default function NavBar() {
             }
         });
 
+        let toUSD = true; 
+
+        console.log(GetUserBalance("0x5E8561573595a012b0a5b01ef66e4bcDF624Dd7F", toUSD));
+
         return (loggedIn()); 
     },[]);
     

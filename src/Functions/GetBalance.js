@@ -1,4 +1,6 @@
 import { ethers } from "ethers";
+import { Network, Alchemy } from "alchemy-sdk"; 
+
 
 const GetUSDBalance = async (userBalance) => {
 
@@ -23,33 +25,32 @@ const GetUSDBalance = async (userBalance) => {
 
 const GetUserBalance = async (address, toUSD) => {
 
-    const network = "goerli";
-    const alchemyKey = "-j_EMb6mI2xbZMkcSOgXF-R34u_RpYv-"; 
-    const provider = new ethers.AlchemyProvider(network, alchemyKey); 
+    if (!address) return ("?"); 
+
+    const settings = {
+        apiKey: "-j_EMb6mI2xbZMkcSOgXF-R34u_RpYv-",
+        network: Network.GOERLI_TESTNET
+    }; 
+
+    const alchemy = new Alchemy(settings); 
 
     let userBalance; 
 
-    if (address) {
+    alchemy.core.getBalance(address.toString(), "latest").then (response => {
 
-        await provider.getBalance(address).then((balance) => {
+        userBalance = parseInt(response._hex); 
 
-            let balanceInEth = ethers.formatEther(balance);
-            userBalance = balanceInEth.toString().substring(0, 4);
+        console.log(userBalance);
 
-            if (toUSD) {
-                return {ETH: userBalance, USD: GetUSDBalance(parseInt(userBalance))}
-            } 
+        if (toUSD) {
+            return ({ETH: userBalance, USD: GetUSDBalance(userBalance)}); 
+        }
 
-        }).catch (error => {
-            console.log("An error occured " + error); 
-        });
-        
-        
-    } else {
-        userBalance = '?'
-    }
+        return userBalance; 
 
-    return userBalance; 
+    }).catch (error => {
+        console.log("An error occured " + error); 
+    })
 }
 
 export default GetUserBalance; 
