@@ -10,7 +10,7 @@ import {
 
 //Styling:
 import { 
-    Modal, ModalHeader, ModalBody, ModalContent,
+    Modal, ModalHeader, ModalBody, ModalContent, Input,
     ModalOverlay, ModalFooter, Button, useDisclosure, ModalCloseButton
 } from "@chakra-ui/react";
 
