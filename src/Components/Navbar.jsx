@@ -80,7 +80,7 @@ export default function NavBar() {
                     </MenuItem>
 
                     <MenuItem>
-                        <LogIn></LogIn>
+                        <LogIn />
                     </MenuItem>
 
                     <MenuItem>
