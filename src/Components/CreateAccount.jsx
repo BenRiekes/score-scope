@@ -17,32 +17,54 @@ const CreateAccount = () => {
 
     const [age, setAge] = useState(); 
     const [gender, setGender] = useState();
-    const [genderChecked, setGenderChecked] = useState([true, false, false]); 
 
+    const [genderMap, setGenderMap] = useState(new Map([
+        [0, {genderVal: 'Male', checked: false}],
+        [1, {genderVal: 'Female', checked: false}],
+        [2, {genderVal: 'Other', checked: false}]
+    ])); 
 
-    const handleGender = (selectedGender, boxIndex) => {
+    
+    const toggleGender = (boxKey) => {
 
-        switch (selectedGender) {
+        const mapCopy = new Map(genderMap); 
+        let boxObj = mapCopy.get(boxKey);
 
-            case selectedGender == gender: 
-                setGender('');
-                setGenderChecked([boxIndex] = false); 
-                break; 
+        const prevCheck = () => {
 
-            case selectedGender != gender:
-                setGender(selectedGender); 
-                setGenderChecked([boxIndex] = true); 
+            for (let i = 0; i < mapCopy.size; i++) {
 
-                for (let i of genderChecked) {
-                    if (i != boxIndex && i == true) {
-                        setGenderChecked([i] = false); 
-                    }
+                if (mapCopy.get(i).checked === true && i != boxKey) {
+                    return i; 
                 }
-                break; 
-
-            default:
-                break; 
+            }
+            return undefined; 
         }
+        
+        if (boxObj.checked) { boxObj.checked = false;
+
+            mapCopy.set(boxKey, boxObj)
+            setGender(undefined); 
+    
+        } else { boxObj.checked = true; 
+
+            if (prevCheck() === undefined) {
+                mapCopy.set(boxKey, boxObj)
+                setGender(undefined); 
+            
+            } else {
+
+                let prevKey = prevCheck();
+                let prevObj = mapCopy.get(prevKey); 
+                prevObj.checked = false; 
+
+                mapCopy.set(prevKey, prevObj)
+                mapCopy.set(boxKey, boxObj)
+                setGender(boxObj.genderVal);   
+            }
+        }
+
+        setGenderMap(mapCopy);
     }
     
     return (
@@ -91,6 +113,7 @@ const CreateAccount = () => {
                                     <FormLabel>Password</FormLabel>
                                     <Input type = 'password' />
                                     <FormHelperText>Password must be 6 characters, alphanumeric </FormHelperText>   
+
                                 </Box>
 
                                 <Box>
@@ -107,25 +130,32 @@ const CreateAccount = () => {
                                         <Checkbox
                                             size = 'md'
                                             colorScheme = 'teal'
-                                            isChecked = {[genderChecked[0]]}
+                                            isChecked = {genderMap.get(0).checked}
 
-                                            onChange = {handleGender('Male', 0)}
+                                            onChange = {() => {
+                                                toggleGender(0);
+                                            }}
                                         >Male</Checkbox>
                                         
                                         <Checkbox
                                             size = 'md'
                                             colorScheme = 'teal'    
-                                            isChecked = {[genderChecked[1]]}
+                                            isChecked = {genderMap.get(1).checked}
 
-                                            onChange = {handleGender('Female', 1)}
+                                            onChange = {() => {
+                                                toggleGender(1);
+                                            }}
                                         >Female</Checkbox>
 
                                         <Checkbox
                                             size = 'md'
                                             colorScheme = 'teal'
-                                            isChecked = {[genderChecked[2]]}
+                                            isChecked = {genderMap.get(2).checked}
+
+                                            onChange = {() => {
+                                                toggleGender(2);
+                                            }}
    
-                                            onChange = {handleGender('Other', 2)}
                                         >Other</Checkbox>
                                     </HStack>
 
