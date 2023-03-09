@@ -7,7 +7,7 @@ import {
     Modal, ModalHeader, ModalBody, ModalContent, Input,
     ModalOverlay, ModalFooter, Button, useDisclosure, ModalCloseButton, Radio, 
     RadioGroup, HStack, FormControl, FormLabel, FormErrorMessage, FormHelperText, 
-    VStack, StackDivider, Box, Checkbox
+    VStack, StackDivider, Box, Checkbox, 
 } from "@chakra-ui/react";
 
 
@@ -15,9 +15,36 @@ const CreateAccount = () => {
 
     const { isOpen, onOpen, onClose } = useDisclosure(); 
 
-    const [ageValue, setAgeValue] = useState(''); 
-    const [genderValue, setGenderValue] = useState('');
-   
+    const [age, setAge] = useState(); 
+    const [gender, setGender] = useState();
+    const [genderChecked, setGenderChecked] = useState([true, false, false]); 
+
+
+    const handleGender = (selectedGender, boxIndex) => {
+
+        switch (selectedGender) {
+
+            case selectedGender == gender: 
+                setGender('');
+                setGenderChecked([boxIndex] = false); 
+                break; 
+
+            case selectedGender != gender:
+                setGender(selectedGender); 
+                setGenderChecked([boxIndex] = true); 
+
+                for (let i of genderChecked) {
+                    if (i != boxIndex && i == true) {
+                        setGenderChecked([i] = false); 
+                    }
+                }
+                break; 
+
+            default:
+                break; 
+        }
+    }
+    
     return (
 
         <>
@@ -80,16 +107,25 @@ const CreateAccount = () => {
                                         <Checkbox
                                             size = 'md'
                                             colorScheme = 'teal'
+                                            isChecked = {[genderChecked[0]]}
+
+                                            onChange = {handleGender('Male', 0)}
                                         >Male</Checkbox>
                                         
                                         <Checkbox
                                             size = 'md'
-                                            colorScheme = 'teal'
+                                            colorScheme = 'teal'    
+                                            isChecked = {[genderChecked[1]]}
+
+                                            onChange = {handleGender('Female', 1)}
                                         >Female</Checkbox>
 
                                         <Checkbox
                                             size = 'md'
                                             colorScheme = 'teal'
+                                            isChecked = {[genderChecked[2]]}
+   
+                                            onChange = {handleGender('Other', 2)}
                                         >Other</Checkbox>
                                     </HStack>
 
