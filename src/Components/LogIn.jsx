@@ -1,5 +1,6 @@
 //React:
-import React from "react"; 
+import React from "react";
+import { useNavigate } from "react-router-dom"; 
 import { useState, useRef, useEffect } from "react";
 
 //Firebase:
@@ -10,7 +11,7 @@ import {
 
 //Styling:
 import { 
-    Modal, ModalHeader, ModalBody, ModalContent,
+    Modal, ModalHeader, ModalBody, ModalContent, 
     ModalOverlay, ModalFooter, Button, useDisclosure, ModalCloseButton
 } from "@chakra-ui/react";
 
@@ -23,7 +24,25 @@ import {
 
 const LogIn = () => {
 
+    //Import State:
+    const navigate = useNavigate(); 
     const { isOpen, onOpen, onClose } = useDisclosure(); 
+
+    //State:
+    const [email, setEmail] = useState(''); 
+    const [password, setPassword] = useState('');
+
+    const handleLogIn = () => {
+
+        signInWithEmailAndPassword(getAuth(), email, password).then (userCredential => {
+
+            navigate("/profile"); 
+
+        }).catch(error => {
+            console.log("An error occured " + error); 
+            alert ("An error occured while logging in"); 
+        })
+    }
 
     return (
 
@@ -51,7 +70,7 @@ const LogIn = () => {
                             >
                                 <Box>
                                     <FormLabel>Email Address</FormLabel>
-                                    <Input type = 'email' />
+                                    <Input type = 'email' onChange = {(event) => setEmail(event.target.value)} />
                                     <FormHelperText>We'll never share your email</FormHelperText>
                                 </Box>
 
@@ -59,12 +78,18 @@ const LogIn = () => {
                                     <FormLabel>Password</FormLabel>
                                     <HStack>
                                         <PinInput type = 'alphanumeric' mask>
-                                            <PinInputField />
-                                            <PinInputField />
-                                            <PinInputField />
-                                            <PinInputField />
-                                            <PinInputField />
-                                            <PinInputField />
+                                            <PinInputField 
+                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => setPassword(password + event.target.value)}/>
                                         </PinInput>
                                     </HStack>
                                 </Box>
@@ -74,7 +99,6 @@ const LogIn = () => {
 
                         </FormControl>
 
-                        
                     </ModalBody>
 
                     <ModalFooter style = {{display: 'flex', justifyContent: 'flex-start', alignItems: 'center'}}>

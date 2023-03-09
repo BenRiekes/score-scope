@@ -12,7 +12,7 @@ import GetUserBalance from "../Functions/GetBalance";
 
 //Style:
 import LogIn from "./LogIn";
-import CreateAccount from "./CreateAccount";
+import CreateAccount, { CreateAccounts } from "./CreateAccount";
 
 import Icon from "@mdi/react";
 import "./CompStyles/NavbarStyles.css"; 
