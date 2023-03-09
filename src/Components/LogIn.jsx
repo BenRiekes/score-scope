@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom"; 
 import { useState, useRef, useEffect } from "react";
+import CreateAccount from "./CreateAccount";
 
 //Firebase:
 import { 
@@ -31,6 +32,20 @@ const LogIn = () => {
     //State:
     const [email, setEmail] = useState(''); 
     const [password, setPassword] = useState('');
+    const [luanchCreate, setLuanchCreate] = useState(false); 
+
+    //------------------------------------------------------------------
+
+    useState(() => { //FIX ME 
+
+        if (luanchCreate) {
+            onClose()
+            return <CreateAccount />
+        }
+
+    }, [luanchCreate])
+
+    //------------------------------------------------------------------
 
     const handleLogIn = () => {
 
@@ -43,6 +58,9 @@ const LogIn = () => {
             alert ("An error occured while logging in"); 
         })
     }
+
+    
+    //------------------------------------------------------------------
 
     return (
 
@@ -103,7 +121,9 @@ const LogIn = () => {
 
                     <ModalFooter style = {{display: 'flex', justifyContent: 'flex-start', alignItems: 'center'}}>
    
-                        <Button varient = 'link'>Dont have an account? Sign up here</Button>
+                        <Button varient = 'link' onClick = {() => {
+                            setLuanchCreate(true);
+                        }}>Dont have an account? Sign up here</Button>
                     </ModalFooter>
 
                 </ModalContent>

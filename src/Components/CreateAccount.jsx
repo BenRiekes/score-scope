@@ -4,11 +4,17 @@ import { useState, useRef, useEffect } from "react";
 
 //Styles:
 import { 
-    Modal, ModalHeader, ModalBody, ModalContent, Input,
-    ModalOverlay, ModalFooter, Button, useDisclosure, ModalCloseButton, Radio, 
-    RadioGroup, HStack, FormControl, FormLabel, FormErrorMessage, FormHelperText, 
-    VStack, StackDivider, Box, Checkbox, 
+    Modal, ModalHeader, ModalBody, ModalContent,  
+    ModalOverlay, ModalFooter, ModalCloseButton, FormControl, 
+    FormLabel, FormErrorMessage, FormHelperText, PinInputField, 
+    PinInput, Checkbox, StackDivider,  VStack, HStack, Input, Button, Box, useDisclosure  
+         
 } from "@chakra-ui/react";
+
+import {
+    NumberInput, NumberInputField,
+    NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper,
+} from '@chakra-ui/react'
 
 
 const CreateAccount = () => {
@@ -16,15 +22,25 @@ const CreateAccount = () => {
     const { isOpen, onOpen, onClose } = useDisclosure(); 
 
     const [age, setAge] = useState(); 
+    const [email, setEmail] = useState('');
     const [gender, setGender] = useState();
+    const [password, setPassword] = useState(['', '']); 
 
     const [genderMap, setGenderMap] = useState(new Map([
         [0, {genderVal: 'Male', checked: false}],
         [1, {genderVal: 'Female', checked: false}],
         [2, {genderVal: 'Other', checked: false}]
-    ])); 
-
+    ]));
     
+    //------------------------------------------------------------------
+
+    const handlePassword = (newChar, passwordIndex) => {
+ 
+        setPassword([...password.slice(0, 1), password[passwordIndex] + newChar, ...password.slice(1)]);
+    }
+
+    //------------------------------------------------------------------
+
     const toggleGender = (boxKey) => {
 
         const mapCopy = new Map(genderMap); 
@@ -40,6 +56,8 @@ const CreateAccount = () => {
             }
             return undefined; 
         }
+
+        //------------------------------------------------------------------
         
         if (boxObj.checked) { boxObj.checked = false;
 
@@ -66,6 +84,8 @@ const CreateAccount = () => {
 
         setGenderMap(mapCopy);
     }
+
+    //------------------------------------------------------------------
     
     return (
 
@@ -77,9 +97,7 @@ const CreateAccount = () => {
                 scrollBehavior = 'inside'
                 motionPreset = 'slideInBottom'
                 isOpen = {isOpen} isCentered onClose = {onClose}
-                
             >
-
                 <ModalOverlay />
 
                 <ModalContent>
@@ -99,26 +117,86 @@ const CreateAccount = () => {
 
                                 <Box>
                                     <FormLabel>Email Address</FormLabel>
-                                    <Input type = 'email' />
+                                    <Input 
+                                        type = 'email' 
+                                        onChange = {(event) => setEmail(email + event.target.value)}
+                                    />
                                     <FormHelperText>We'll never share your email</FormHelperText>
                                 </Box>
 
+                                
+
                                 <Box>
                                     <FormLabel m={2}>Username</FormLabel>
-                                    <Input type = 'username' />
+                                    <Input type = 'username'/>
+                                    <FormHelperText>Username must be at least 3 characters, alphanumeric </FormHelperText>
                                 </Box>
-                                
                                 
                                 <Box>
                                     <FormLabel>Password</FormLabel>
-                                    <Input type = 'password' />
-                                    <FormHelperText>Password must be 6 characters, alphanumeric </FormHelperText>   
 
+                                    <HStack>
+                                        <PinInput type = 'alphanumeric'>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                        </PinInput>
+                                    </HStack>
+
+                                    <FormHelperText>Password must be 6 characters, alphanumeric </FormHelperText>   
                                 </Box>
 
                                 <Box>
                                     <FormLabel>Confirm Password</FormLabel>
-                                    <Input type = 'password' />
+                                    <HStack>
+                                        <PinInput type = 'alphanumeric' mask>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                            <PinInputField 
+                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                        </PinInput>
+                                    </HStack>
+                                </Box>
+
+                                <Box>
+                                    <FormLabel>Age</FormLabel>
+
+                                    <NumberInput
+                                        size = 'md'
+                                        maxW = {32}
+                                        min = {18}
+                                        max = {100}
+                                        defaultValue = {18}
+                                        keepWithinRange={true}
+                                        clampValueOnBlur={true}
+                                    >
+                                        
+                                        <NumberInputField onChange = {(event) => setAge(event.target.value)}/>
+                                        <NumberInputStepper>
+                                            <NumberIncrementStepper />
+                                            <NumberDecrementStepper />
+                                        </NumberInputStepper>
+
+                                    </NumberInput>
+                                            
+                                    <FormHelperText>Must be 18 or older</FormHelperText>
                                 </Box>
                                 
                                 <Box>
@@ -160,8 +238,9 @@ const CreateAccount = () => {
                                     </HStack>
 
                                 </Box>
-                                
-                                <Button colorScheme = 'teal' varient = 'solid'>Log In</Button>
+
+                               
+                                <Button colorScheme = 'teal' varient = 'solid'>Create</Button>
                             </VStack>
                             
                         </FormControl>

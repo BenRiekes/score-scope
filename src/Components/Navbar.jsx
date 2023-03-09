@@ -76,11 +76,11 @@ export default function NavBar() {
                 <MenuList>
 
                     <MenuItem>
-                        <p>Log Out</p>
+                        <LogIn />
                     </MenuItem>
 
                     <MenuItem>
-                        <LogIn />
+                        <Button>Log Out</Button>
                     </MenuItem>
 
                     <MenuItem>
