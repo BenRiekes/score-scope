@@ -13,9 +13,19 @@
     align-items: center;
     gap: 1rem;
     padding: 5px; 
-    border-radius: 1rem; 
+    border-radius: .5rem; 
 
-    background-color: aqua;
+    background-color: #514f4f;
+}
+
+/*------------------------------------------------------------------*/
+
+.nav-section button {
+    border-radius: .5rem;
+}
+
+.nav-section button:hover {
+    background-color: #9c6ca8;
 }
 
 .nav-section li {

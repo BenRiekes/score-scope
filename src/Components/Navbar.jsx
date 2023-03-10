@@ -46,7 +46,7 @@ export default function NavBar() {
     //------------------------------------------------------------------
 
 
-    const LogOut = async () => {
+    const handleLogOut = async () => {
 
         if (!auth.currentUser) {
             alert("Can not log out when you are not logged in"); 
@@ -69,6 +69,7 @@ export default function NavBar() {
 
         return (
             <Menu>
+                
                 <MenuButton isActive={isOpen} as={Button} rightIcon = {arrow}>
                     Score Scope
                 </MenuButton>
@@ -80,11 +81,13 @@ export default function NavBar() {
                     </MenuItem>
 
                     <MenuItem>
-                        <Button>Log Out</Button>
+                        <Button onClick = {() => {
+                            handleLogOut();
+                        }}>Log Out</Button>
                     </MenuItem>
 
                     <MenuItem>
-                        <CreateAccount></CreateAccount>
+                        <CreateAccount/>
                     </MenuItem>
                     
                 </MenuList>

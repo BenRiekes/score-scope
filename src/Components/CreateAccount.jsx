@@ -24,14 +24,15 @@ const CreateAccount = () => {
     const [age, setAge] = useState(); 
     const [email, setEmail] = useState('');
     const [gender, setGender] = useState();
-    const [password, setPassword] = useState(['', '']); 
+   const [password, setPassword] = useState(['', '']); 
 
     const [genderMap, setGenderMap] = useState(new Map([
         [0, {genderVal: 'Male', checked: false}],
         [1, {genderVal: 'Female', checked: false}],
         [2, {genderVal: 'Other', checked: false}]
     ]));
-    
+
+  
     //------------------------------------------------------------------
 
     const handlePassword = (newChar, passwordIndex) => {
