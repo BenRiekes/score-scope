@@ -121,9 +121,7 @@ const LogIn = () => {
 
                     <ModalFooter style = {{display: 'flex', justifyContent: 'flex-start', alignItems: 'center'}}>
    
-                        <Button varient = 'link' onClick = {() => {
-                            setLuanchCreate(true);
-                        }}>Dont have an account? Sign up here</Button>
+                        <CreateAccount>Dont have an account? Sign up here</CreateAccount>
                     </ModalFooter>
 
                 </ModalContent>

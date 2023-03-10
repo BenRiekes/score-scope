@@ -16,14 +16,12 @@ import {
     Modal, ModalHeader, ModalBody, ModalContent,  
     ModalOverlay, ModalFooter, ModalCloseButton, FormControl, 
     FormLabel, FormErrorMessage, FormHelperText, PinInputField, 
-    PinInput, Checkbox, StackDivider,  VStack, HStack, Input, Button, Box, useDisclosure  
+    PinInput, Checkbox, StackDivider,  VStack, HStack, Input, Button, Box, useDisclosure, NumberInput, NumberInputField,
+    NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper,
          
 } from "@chakra-ui/react";
 
-import {
-    NumberInput, NumberInputField,
-    NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper,
-} from '@chakra-ui/react'
+
 
 
 
