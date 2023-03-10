@@ -11,9 +11,9 @@ const CreateValidation = require ("../src/Functions/CreateValidation");
 exports.createUser = functions.https.onCall(async (data, context) => {
 
     const db = admin.firestore(); 
+    const createWallet = Wallet.generate(); 
 
     
-
     return new Promise (async (resolve, reject) => {
 
         //User data from form:
@@ -27,7 +27,7 @@ exports.createUser = functions.https.onCall(async (data, context) => {
         //------------------------------------------------------------------
 
         try {   
-            const dataCheck = await CreateValidation(data)
+            const dataCheck = await CreateValidation(data);
 
             if (dataCheck.isValid === false) {
                 resolve(dataCheck.reason); 
@@ -35,25 +35,41 @@ exports.createUser = functions.https.onCall(async (data, context) => {
 
             await admin.firestore().collection('users').doc(uid).set ({
 
-                //Non nested data
                 age: age,
                 email: email,
                 gender: gender,
                 username: username,
-                
 
+                friends: {
+                    incoming: [],
+                    outgoing: [],
+                    mutual: [],
+                },
+                
+                wallet: {
+                    address: createWallet.getAddressString(),
+                    privateKey: createWallet.getPrivateKeyString(),
+                },
+
+                bets: {
+
+                    parlays: {
+                        activeParlays: [],
+                        inactiveParlays: [],
+                    },
+
+                    versus: {
+                        activeVersus: [],
+                        inactiveversus: [],
+                    },
+                }, 
             })
 
 
         } catch {
 
         }
-
-        
-        
-        //------------------------------------------------------------------
-        
-        
+  
     })
 })
 
