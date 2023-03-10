@@ -87,7 +87,7 @@ export default function NavBar() {
                     </MenuItem>
 
                     <MenuItem>
-                        <CreateAccount/>
+                        <CreateAccount>Create Account</CreateAccount>
                     </MenuItem>
                     
                 </MenuList>
