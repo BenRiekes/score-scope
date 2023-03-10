@@ -1,6 +1,15 @@
 //React:
 import React from "react"; 
 import { useState, useRef, useEffect } from "react";
+import CreateValidation from "../Functions/CreateValidation";
+
+import firebase from 'firebase/compat/app';
+import { auth, db } from "../firebase-config";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { httpsCallable, getFunctions } from "firebase/functions";
+
+
+
 
 //Styles:
 import { 
@@ -17,20 +26,93 @@ import {
 } from '@chakra-ui/react'
 
 
+
 const CreateAccount = () => {
 
     const { isOpen, onOpen, onClose } = useDisclosure(); 
 
     const [age, setAge] = useState(); 
     const [email, setEmail] = useState('');
-    const [gender, setGender] = useState();
-   const [password, setPassword] = useState(['', '']); 
+    const [gender, setGender] = useState('');
+
+    const [username, setUsername] = useState(''); 
+    const [password, setPassword] = useState(['', '']); 
 
     const [genderMap, setGenderMap] = useState(new Map([
         [0, {genderVal: 'Male', checked: false}],
         [1, {genderVal: 'Female', checked: false}],
         [2, {genderVal: 'Other', checked: false}]
     ]));
+
+    //------------------------------------------------------------------
+
+    const createUser = async () => {
+
+        const formParams = {
+            password: [password[0], password[1]],
+            username: username, 
+            gender: gender,
+            age: age
+        }
+
+        let form = await CreateValidation(formParams); 
+
+        if (form.isValid === false) {
+            alert (form.reason);
+            return; 
+        }
+
+        try {
+
+            const firebaseCreateAccount = httpsCallable(getFunctions(), "createUser");
+            const userCredential =  await createUserWithEmailAndPassword(auth, email, password);
+
+            if (userCredential) {
+
+                firebaseCreateAccount ({
+
+                    uid: userCredential.uid,
+                    username: username,
+                    password: [password[0], password[1]],
+                    gender: gender,
+                    age: age
+
+                }).then(response => {
+
+                    if (response.data != "Account Successfully Created") {
+                        alert("An error occured while creating your account");
+                        return; 
+                    }
+
+                    alert("Account successfully created"); 
+                    return; 
+
+                }).catch(error => {
+
+                    console.log("An error occured " + error); 
+                })
+            }
+
+        } catch (error) {
+
+            let errorCode = error.code; 
+
+            switch (errorCode) {
+
+                case errorCode === 'auth/weak-password' : 
+                    alert ("Password is too weak"); 
+                    break; 
+                case errorCode === 'auth/email-already-in-use' :
+                    alert ("Account already exist");
+                    break; 
+                case errorCode == 'auth/invalid-email' :
+                    alert ("Invalid email"); 
+                default:
+                    alert (error.message); 
+                    break; 
+            }
+        }
+    }
 
   
     //------------------------------------------------------------------
@@ -129,7 +211,10 @@ const CreateAccount = () => {
 
                                 <Box>
                                     <FormLabel m={2}>Username</FormLabel>
-                                    <Input type = 'username'/>
+                                    <Input 
+                                        type = 'username' 
+                                        onChange = {(event) => setUsername(username + event.target.value)}
+                                    />
                                     <FormHelperText>Username must be at least 3 characters, alphanumeric </FormHelperText>
                                 </Box>
                                 
