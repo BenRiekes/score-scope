@@ -9,8 +9,6 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { httpsCallable, getFunctions } from "firebase/functions";
 
 
-
-
 //Styles:
 import { 
     Modal, ModalHeader, ModalBody, ModalContent,  
