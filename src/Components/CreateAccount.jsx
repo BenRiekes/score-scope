@@ -44,6 +44,10 @@ const CreateAccount = () => {
         [2, {genderVal: 'Other', checked: false}]
     ]));
 
+    useEffect(() => {
+        console.log(passwordMap);
+    }, [passwordMap])
+
     
     //------------------------------------------------------------------
 
@@ -129,14 +133,19 @@ const CreateAccount = () => {
   
     //------------------------------------------------------------------
 
-    const handlePassword = (passwordIndex, charIndex, newChar) => {
+    const handlePassword = (passwordIndex, charIndex, newChar, keyCode) => {
 
+       
         const mapCopy = new Map(passwordMap);
         const charArray = mapCopy.get(passwordIndex); 
 
-        charArray[charIndex] = newChar;
-        mapCopy.set(passwordIndex, charArray); 
+        if (keyCode === 8) {
+            charArray[charIndex] = '';
+        } else {
+            charArray[charIndex] = newChar;
+        }   
 
+        mapCopy.set(passwordIndex, charArray); 
         setPasswordMap(mapCopy);  
     }   
 
@@ -232,6 +241,7 @@ const CreateAccount = () => {
                                     <Input 
                                         type = 'username' 
                                         onChange = {(event) => setUsername(username + event.target.value)}
+                                        
                                     />
                                     <FormHelperText>Username must be at least 3 characters, alphanumeric </FormHelperText>
                                 </Box>
@@ -242,17 +252,23 @@ const CreateAccount = () => {
                                     <HStack>
                                         <PinInput type = 'alphanumeric'>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(0, 0, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 0, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(0, 1, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 1, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(0, 2, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 2, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(0, 3, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 3, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(0, 4, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 4, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(0, 5, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 5, event.target.value, event.target.keyCode)}/>
                                         </PinInput>
                                     </HStack>
 
@@ -263,18 +279,24 @@ const CreateAccount = () => {
                                     <FormLabel>Confirm Password</FormLabel>
                                     <HStack>
                                         <PinInput type = 'alphanumeric' mask>
+                                        <PinInputField 
+                                                onChange = {(event) => handlePassword
+                                                (1, 0, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(1, 0, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (1, 1, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(1, 1, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (1, 2, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(1, 2, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (1, 3, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(1, 3, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (1, 4, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(1, 4, event.target.value)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword(1, 5, event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (1, 5, event.target.value, event.target.keyCode)}/>
                                         </PinInput>
                                     </HStack>
                                 </Box>
