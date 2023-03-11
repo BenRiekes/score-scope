@@ -4,8 +4,8 @@ const functions = require ("firebase-functions");
 
 //Func:
 admin.initializeApp(); 
-const Wallet = require('ethereumjs-wallet');
-const CreateValidation = require ("../src/Functions/CreateValidation");
+const Wallet = require('ethereumjs-wallet').default;
+//const CreateValidation = require ("../src/Functions/CreateValidation");
 
 
 exports.createUser = functions.https.onCall(async (data, context) => {
@@ -27,11 +27,11 @@ exports.createUser = functions.https.onCall(async (data, context) => {
         //------------------------------------------------------------------
 
         try {   
-            const dataCheck = await CreateValidation(data);
+            //const dataCheck = await CreateValidation(data);
 
-            if (dataCheck.isValid === false) {
-                resolve(dataCheck.reason); 
-            } 
+            // if (dataCheck.isValid === false) {
+            //     resolve(dataCheck.reason); 
+            // } 
 
             await admin.firestore().collection('users').doc(uid).set ({
 
@@ -52,7 +52,6 @@ exports.createUser = functions.https.onCall(async (data, context) => {
                 },
 
                 bets: {
-
                     parlays: {
                         activeParlays: [],
                         inactiveParlays: [],
@@ -63,11 +62,20 @@ exports.createUser = functions.https.onCall(async (data, context) => {
                         inactiveversus: [],
                     },
                 }, 
+
+            }).then (x => {
+                resolve ("Account Sucessfully Created"); 
+
+            }).catch (error => {
+                console.log(error);
+                functions.logger.error(error); 
+                resolve ("An error occured while creating your account");
             })
 
-
-        } catch {
-
+        } catch (error) {
+            console.log(error);
+            functions.logger.error(error); 
+            resolve ("An error occured while creating your account");
         }
   
     })

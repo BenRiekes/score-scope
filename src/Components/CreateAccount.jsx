@@ -31,8 +31,12 @@ const CreateAccount = () => {
     const [email, setEmail] = useState('');
     const [gender, setGender] = useState('');
 
-    const [username, setUsername] = useState(''); 
-    const [password, setPassword] = useState(['', '']); 
+    const [username, setUsername] = useState('');  
+
+    const [passwordMap, setPasswordMap] = useState(new Map([
+        [0, ['', '','','','','']],
+        [1, ['','','','','','']]
+    ])); 
 
     const [genderMap, setGenderMap] = useState(new Map([
         [0, {genderVal: 'Male', checked: false}],
@@ -40,16 +44,25 @@ const CreateAccount = () => {
         [2, {genderVal: 'Other', checked: false}]
     ]));
 
+    
     //------------------------------------------------------------------
 
     const createUser = async () => {
 
+        const setPassword = passwordMap.get(0).join('');
+        const confirmPassword = passwordMap.get(1).join('')
+
         const formParams = {
-            password: [password[0], password[1]],
+            password: [
+                setPassword,
+                confirmPassword
+            ],
             username: username, 
             gender: gender,
             age: age
         }
+
+        console.log(formParams);
 
         let form = await CreateValidation(formParams); 
 
@@ -61,15 +74,18 @@ const CreateAccount = () => {
         try {
 
             const firebaseCreateAccount = httpsCallable(getFunctions(), "createUser");
-            const userCredential =  await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential =  await createUserWithEmailAndPassword(auth, email, setPassword);
 
             if (userCredential) {
 
                 firebaseCreateAccount ({
 
                     uid: userCredential.uid,
-                    username: username,
-                    password: [password[0], password[1]],
+                    username: username,  
+                    password: [
+                       setPassword,
+                       confirmPassword
+                    ],
                     gender: gender,
                     age: age
 
@@ -113,10 +129,16 @@ const CreateAccount = () => {
   
     //------------------------------------------------------------------
 
-    const handlePassword = (newChar, passwordIndex) => {
- 
-        setPassword([...password.slice(0, 1), password[passwordIndex] + newChar, ...password.slice(1)]);
-    }
+    const handlePassword = (passwordIndex, charIndex, newChar) => {
+
+        const mapCopy = new Map(passwordMap);
+        const charArray = mapCopy.get(passwordIndex); 
+
+        charArray[charIndex] = newChar;
+        mapCopy.set(passwordIndex, charArray); 
+
+        setPasswordMap(mapCopy);  
+    }   
 
     //------------------------------------------------------------------
 
@@ -220,17 +242,17 @@ const CreateAccount = () => {
                                     <HStack>
                                         <PinInput type = 'alphanumeric'>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                                onChange = {(event) => handlePassword(0, 0, event.target.value)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                                onChange = {(event) => handlePassword(0, 1, event.target.value)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                                onChange = {(event) => handlePassword(0, 2, event.target.value)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                                onChange = {(event) => handlePassword(0, 3, event.target.value)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                                onChange = {(event) => handlePassword(0, 4, event.target.value)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 0)}/>
+                                                onChange = {(event) => handlePassword(0, 5, event.target.value)}/>
                                         </PinInput>
                                     </HStack>
 
@@ -242,17 +264,17 @@ const CreateAccount = () => {
                                     <HStack>
                                         <PinInput type = 'alphanumeric' mask>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                                onChange = {(event) => handlePassword(1, 0, event.target.value)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                                onChange = {(event) => handlePassword(1, 1, event.target.value)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                                onChange = {(event) => handlePassword(1, 2, event.target.value)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                                onChange = {(event) => handlePassword(1, 3, event.target.value)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                                onChange = {(event) => handlePassword(1, 4, event.target.value)}/>
                                             <PinInputField 
-                                                onChange = {(event) => handlePassword(event.target.value, 1)}/>
+                                                onChange = {(event) => handlePassword(1, 5, event.target.value)}/>
                                         </PinInput>
                                     </HStack>
                                 </Box>
@@ -322,7 +344,12 @@ const CreateAccount = () => {
                                 </Box>
 
                                
-                                <Button colorScheme = 'teal' varient = 'solid'>Create</Button>
+                                {/* <Button 
+                                    colorScheme = 'teal' varient = 'solid'
+                                    onClick = {() => {
+                                        createUser(); 
+                                    }}
+                                >Create</Button> */}
                             </VStack>
                             
                         </FormControl>
