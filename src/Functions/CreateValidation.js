@@ -2,6 +2,7 @@
 //Firebase:
 import {query, where, getDocs, collection, getFirestore } from "firebase/firestore";
 
+//Create Account Functions: --------------------------------------------------------------
 
 const validUsername = async(username) => {
 
@@ -35,6 +36,7 @@ const validUsername = async(username) => {
     return ({isValid: false, reason: undefined}); 
 }
 
+//--------------------------------------------------------------
 
 const CreateValidation = async(formParams) => {
 
@@ -60,5 +62,11 @@ const CreateValidation = async(formParams) => {
             return ({isValid: true, reason: undefined});     
     }
 }
+
+//--------------------------------------------------------------
+
+
+
+
 
 export default CreateValidation;

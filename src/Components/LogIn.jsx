@@ -31,27 +31,39 @@ const LogIn = () => {
 
     //State:
     const [email, setEmail] = useState(''); 
-    const [password, setPassword] = useState('');
-    const [luanchCreate, setLuanchCreate] = useState(false); 
 
-    //------------------------------------------------------------------
+    const [passwordMap, setPasswordMap] = useState(new Map([
+        [0, ['', '','','','','']]
+    ])); 
 
-    useState(() => { //FIX ME 
+    const handlePassword = (passwordIndex, charIndex, newChar, keyCode) => {
 
-        if (luanchCreate) {
-            onClose()
-            return <CreateAccount />
-        }
+       
+        const mapCopy = new Map(passwordMap);
+        const charArray = mapCopy.get(passwordIndex); 
 
-    }, [luanchCreate])
+        if (keyCode === 8) {
+            charArray[charIndex] = '';
+        } else {
+            charArray[charIndex] = newChar;
+        }   
+
+        mapCopy.set(passwordIndex, charArray); 
+        setPasswordMap(mapCopy);  
+    } 
+
+
 
     //------------------------------------------------------------------
 
     const handleLogIn = () => {
 
+        const password = passwordMap.get(0).join('');
+
         signInWithEmailAndPassword(getAuth(), email, password).then (userCredential => {
 
-            navigate("/profile"); 
+            onClose();
+            window.location.reload();
 
         }).catch(error => {
             console.log("An error occured " + error); 
@@ -95,34 +107,35 @@ const LogIn = () => {
                                 <Box>
                                     <FormLabel>Password</FormLabel>
                                     <HStack>
-                                        <PinInput type = 'alphanumeric' mask>
+                                    <PinInput type = 'alphanumeric'>
                                             <PinInputField 
-                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 0, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 1, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 2, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 3, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 4, event.target.value, event.target.keyCode)}/>
                                             <PinInputField 
-                                                onChange = {(event) => setPassword(password + event.target.value)}/>
+                                                onChange = {(event) => handlePassword
+                                                (0, 5, event.target.value, event.target.keyCode)}/>
                                         </PinInput>
                                     </HStack>
                                 </Box>
                                 
-                                <Button colorScheme = 'teal' varient = 'solid'>Log In</Button>
+                                <Button colorScheme = 'purple' varient = 'solid' onClick = {handleLogIn}>Log In</Button>
                             </VStack>
 
                         </FormControl>
 
                     </ModalBody>
-
-                    <ModalFooter style = {{display: 'flex', justifyContent: 'flex-start', alignItems: 'center'}}>
-   
-                        <CreateAccount>Dont have an account? Sign up here</CreateAccount>
-                    </ModalFooter>
 
                 </ModalContent>
             </Modal>

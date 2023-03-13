@@ -20,13 +20,6 @@
 
 /*------------------------------------------------------------------*/
 
-.nav-section button {
-    border-radius: .5rem;
-}
-
-.nav-section button:hover {
-    background-color: #9c6ca8;
-}
 
 .nav-section li {
     list-style-type: none; 

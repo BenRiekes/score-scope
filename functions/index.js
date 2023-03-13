@@ -4,80 +4,81 @@ const functions = require ("firebase-functions");
 
 //Func:
 admin.initializeApp(); 
-const Wallet = require('ethereumjs-wallet').default;
-//const CreateValidation = require ("../src/Functions/CreateValidation");
+const Wallet = require('ethereumjs-wallet').default
 
 
 exports.createUser = functions.https.onCall(async (data, context) => {
 
-    const db = admin.firestore(); 
-    const createWallet = Wallet.generate(); 
-
-    
     return new Promise (async (resolve, reject) => {
 
+        const createWallet = Wallet.generate(); 
+
         //User data from form:
-        const uid = data.uid; 
+        const uid = context.auth.uid;  
         const email = data.email; 
         const username = data.username; 
         const age = data.age; 
         const gender = data.gender;
 
+        //------------------------------------------------------------------
+
+        const validGenders = ['Male', 'Female', 'Other']; 
+
+        if (!uid) resolve ({isValid: false, reason: "No UID present"});
+        if (age < 18) resolve ({isValid: false, reason: "Must be 18 or older"}); 
+        
+        for (let i = 0; i < validGenders.length; i++) {
+           
+            if (validGenders[i] != gender && i === 2) {
+                resolve ({isValid: false, reason: "Invalid gender selection"}); 
+
+            } else {
+                break; 
+            }
+        }
         
         //------------------------------------------------------------------
 
-        try {   
-            //const dataCheck = await CreateValidation(data);
+        
+        await admin.firestore().collection('users').doc(uid).set ({
 
-            // if (dataCheck.isValid === false) {
-            //     resolve(dataCheck.reason); 
-            // } 
+            age: age,
+            email: email,
+            gender: gender,
+            username: username,
 
-            await admin.firestore().collection('users').doc(uid).set ({
+            friends: {
+                incoming: [],
+                outgoing: [],
+                mutual: [],
+            },
+            
+            wallet: {
+                address: createWallet.getAddressString(),
+                privateKey: createWallet.getPrivateKeyString(),
+            },
 
-                age: age,
-                email: email,
-                gender: gender,
-                username: username,
-
-                friends: {
-                    incoming: [],
-                    outgoing: [],
-                    mutual: [],
+            bets: {
+                parlays: {
+                    activeParlays: [],
+                    inactiveParlays: [],
                 },
-                
-                wallet: {
-                    address: createWallet.getAddressString(),
-                    privateKey: createWallet.getPrivateKeyString(),
+
+                versus: {
+                    activeVersus: [],
+                    inactiveversus: [],
                 },
+            }, 
 
-                bets: {
-                    parlays: {
-                        activeParlays: [],
-                        inactiveParlays: [],
-                    },
+        }).then (response => {
+            resolve ({isValid: true, reason: "Account successfully created"}); 
 
-                    versus: {
-                        activeVersus: [],
-                        inactiveversus: [],
-                    },
-                }, 
-
-            }).then (x => {
-                resolve ("Account Sucessfully Created"); 
-
-            }).catch (error => {
-                console.log(error);
-                functions.logger.error(error); 
-                resolve ("An error occured while creating your account");
-            })
-
-        } catch (error) {
-            console.log(error);
+        }).catch (error => {
+            
             functions.logger.error(error); 
-            resolve ("An error occured while creating your account");
-        }
-  
+            resolve ({isValid: true, reason: "An error occured while creating your account"});
+        })
+
     })
 })
 

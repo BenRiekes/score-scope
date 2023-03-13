@@ -15,22 +15,20 @@ import {
     ModalOverlay, ModalFooter, ModalCloseButton, FormControl, 
     FormLabel, FormErrorMessage, FormHelperText, PinInputField, 
     PinInput, Checkbox, StackDivider,  VStack, HStack, Input, Button, Box, useDisclosure, NumberInput, NumberInputField,
-    NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper,
+    NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, Spinner
          
 } from "@chakra-ui/react";
-
-
-
 
 
 const CreateAccount = () => {
 
     const { isOpen, onOpen, onClose } = useDisclosure(); 
+    const [creationLoading, setCreationLoading] = useState(false);
+    
 
     const [age, setAge] = useState(); 
     const [email, setEmail] = useState('');
     const [gender, setGender] = useState('');
-
     const [username, setUsername] = useState('');  
 
     const [passwordMap, setPasswordMap] = useState(new Map([
@@ -44,77 +42,45 @@ const CreateAccount = () => {
         [2, {genderVal: 'Other', checked: false}]
     ]));
 
-    useEffect(() => {
-        console.log(passwordMap);
-    }, [passwordMap])
-
-    
     //------------------------------------------------------------------
 
     const createUser = async () => {
 
-        const setPassword = passwordMap.get(0).join('');
-        const confirmPassword = passwordMap.get(1).join('')
+        setCreationLoading(true);
+
+        const password1 = passwordMap.get(0).join('');
+        const password2 = passwordMap.get(1).join('');
 
         const formParams = {
             password: [
-                setPassword,
-                confirmPassword
+                password1,
+                password2
             ],
             username: username, 
             gender: gender,
             age: age
         }
 
-        console.log(formParams);
+        //-----------------------------------------------------
 
-        let form = await CreateValidation(formParams); 
+        const form = await CreateValidation(formParams); 
 
         if (form.isValid === false) {
+            setCreationLoading(false);
             alert (form.reason);
             return; 
         }
 
-        try {
+        //-----------------------------------------------------
 
-            const firebaseCreateAccount = httpsCallable(getFunctions(), "createUser");
-            const userCredential =  await createUserWithEmailAndPassword(auth, email, setPassword);
+        //Firebase auth createion and handeling: 
+        const userCredential =  await createUserWithEmailAndPassword(auth, email, password1).catch (error => {
 
-            if (userCredential) {
-
-                firebaseCreateAccount ({
-
-                    uid: userCredential.uid,
-                    username: username,  
-                    password: [
-                       setPassword,
-                       confirmPassword
-                    ],
-                    gender: gender,
-                    age: age
-
-                }).then(response => {
-
-                    if (response.data != "Account Successfully Created") {
-                        alert("An error occured while creating your account");
-                        return; 
-                    }
-
-                    alert("Account successfully created"); 
-                    return; 
-
-                }).catch(error => {
-
-                    console.log("An error occured " + error); 
-                })
-            }
-
-        } catch (error) {
-
-            let errorCode = error.code; 
+            setCreationLoading(false);
+            let errorCode = error.message; 
 
             switch (errorCode) {
-
+    
                 case errorCode === 'auth/weak-password' : 
                     alert ("Password is too weak"); 
                     break; 
@@ -127,6 +93,41 @@ const CreateAccount = () => {
                     alert (error.message); 
                     break; 
             }
+        })
+
+        //-----------------------------------------------------
+
+        if (!userCredential) {
+            setCreationLoading(false);
+            return; 
+
+        }  else {
+
+            //Firebase function to call after create user isntance has been successfull
+            const firebaseCreateAccount = httpsCallable(getFunctions(), "createUser");
+            
+            const response = await firebaseCreateAccount ({
+
+                uid: userCredential.user.uid,
+                username: username,  
+                gender: gender,
+                email: email,
+                age: parseInt(age)
+
+            })
+            
+            if (response.data.isValid === false) {
+                setCreationLoading(false);
+                alert("An error occured while creating your account");
+                return; 
+
+            } else {
+                setCreationLoading(false); onClose();
+                alert("Account successfully created"); 
+                window.location.reload();
+                return; 
+            }   
+  
         }
     }
 
@@ -135,7 +136,6 @@ const CreateAccount = () => {
 
     const handlePassword = (passwordIndex, charIndex, newChar, keyCode) => {
 
-       
         const mapCopy = new Map(passwordMap);
         const charArray = mapCopy.get(passwordIndex); 
 
@@ -177,8 +177,8 @@ const CreateAccount = () => {
         } else { boxObj.checked = true; 
 
             if (prevCheck() === undefined) {
-                mapCopy.set(boxKey, boxObj)
-                setGender(undefined); 
+                mapCopy.set(boxKey, boxObj);
+                setGender(boxObj.genderVal); 
             
             } else {
 
@@ -204,13 +204,15 @@ const CreateAccount = () => {
 
             <Modal 
                 size = 'md'
+                maxH = '30%'
                 scrollBehavior = 'inside'
                 motionPreset = 'slideInBottom'
                 isOpen = {isOpen} isCentered onClose = {onClose}
+                
             >
                 <ModalOverlay />
 
-                <ModalContent>
+                <ModalContent style = {{maxH:'20px'}}>
 
                     <ModalHeader>Create Account</ModalHeader>
                     <ModalCloseButton />
@@ -229,18 +231,16 @@ const CreateAccount = () => {
                                     <FormLabel>Email Address</FormLabel>
                                     <Input 
                                         type = 'email' 
-                                        onChange = {(event) => setEmail(email + event.target.value)}
+                                        onChange = {(event) => setEmail(event.target.value)}
                                     />
                                     <FormHelperText>We'll never share your email</FormHelperText>
                                 </Box>
-
-                                
 
                                 <Box>
                                     <FormLabel m={2}>Username</FormLabel>
                                     <Input 
                                         type = 'username' 
-                                        onChange = {(event) => setUsername(username + event.target.value)}
+                                        onChange = {(event) => setUsername(event.target.value)}
                                         
                                     />
                                     <FormHelperText>Username must be at least 3 characters, alphanumeric </FormHelperText>
@@ -278,7 +278,7 @@ const CreateAccount = () => {
                                 <Box>
                                     <FormLabel>Confirm Password</FormLabel>
                                     <HStack>
-                                        <PinInput type = 'alphanumeric' mask>
+                                        <PinInput type = 'alphanumeric'>
                                         <PinInputField 
                                                 onChange = {(event) => handlePassword
                                                 (1, 0, event.target.value, event.target.keyCode)}/>
@@ -316,8 +316,8 @@ const CreateAccount = () => {
                                         
                                         <NumberInputField onChange = {(event) => setAge(event.target.value)}/>
                                         <NumberInputStepper>
-                                            <NumberIncrementStepper />
-                                            <NumberDecrementStepper />
+                                            <NumberIncrementStepper/>
+                                            <NumberDecrementStepper/>
                                         </NumberInputStepper>
 
                                     </NumberInput>
@@ -325,12 +325,10 @@ const CreateAccount = () => {
                                     <FormHelperText>Must be 18 or older</FormHelperText>
                                 </Box>
                                 
-                                <Box>
-                                    
+                                <Box> 
                                     <FormLabel>Gender</FormLabel>
 
                                     <HStack>
-
                                         <Checkbox
                                             size = 'md'
                                             colorScheme = 'teal'
@@ -362,24 +360,21 @@ const CreateAccount = () => {
    
                                         >Other</Checkbox>
                                     </HStack>
-
                                 </Box>
-
-                               
-                                {/* <Button 
-                                    colorScheme = 'teal' varient = 'solid'
-                                    onClick = {() => {
-                                        createUser(); 
-                                    }}
-                                >Create</Button> */}
-                            </VStack>
-                            
+                                    
+                                
+                                <Button 
+                                    colorScheme = 'purple' varient = 'solid'
+                                    isLoading = {creationLoading}
+                                    onClick = {createUser}
+                                >   
+                                    Create
+                                </Button>
+                            </VStack>                           
                         </FormControl>
 
                     </ModalBody>
-
                 </ModalContent>
-
             </Modal>
         </>
     )

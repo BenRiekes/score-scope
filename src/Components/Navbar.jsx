@@ -17,7 +17,9 @@ import CreateAccount, { CreateAccounts } from "./CreateAccount";
 import Icon from "@mdi/react";
 import "./CompStyles/NavbarStyles.css"; 
 import { mdiChevronDown, mdiChevronUp, mdiTarget, mdiWalletPlus } from "@mdi/js";
-import { Button, ButtonGroup, Heading, Menu, MenuButton, MenuList, MenuItem, useDisclosure} from "@chakra-ui/react";
+import { Button, ButtonGroup, Heading, Menu, MenuButton, MenuList, MenuItem, 
+    useDisclosure, Divider, VStack, StackDivider
+} from "@chakra-ui/react";
 
 
 
@@ -27,8 +29,12 @@ export default function NavBar() {
     const auth = getAuth(); 
     const navigate = useNavigate();
     const [user, setUser] = useState(null); 
+    const [userBalance, setUserBalance] = useState('?');
 
     useEffect(() => {
+
+        setUserBalance(GetUserBalance("0x5E8561573595a012b0a5b01ef66e4bcDF624Dd7F"));
+        console.log(userBalance);
         
         const loggedIn = auth.onAuthStateChanged((authUser) => {
 
@@ -41,10 +47,10 @@ export default function NavBar() {
         });
 
         return (loggedIn()); 
+
     },[]);
     
     //------------------------------------------------------------------
-
 
     const handleLogOut = async () => {
 
@@ -61,42 +67,55 @@ export default function NavBar() {
         });
     }   
 
-    
+    //------------------------------------------------------------------
+
     const SignAction = () => {
 
         const { isOpen, onOpen, onClose } = useDisclosure()
-        const arrow = isOpen ? <Icon path={mdiChevronUp} size={1}/> : <Icon path={mdiChevronDown} size={1}/>
+        const arrow = isOpen ? <Icon path={mdiChevronUp} size={1}/>: <Icon path={mdiChevronDown} size={1}/>
+        
+        const handleMenu = () => {
+
+            if (isOpen === true) {
+                onClose(); 
+            } else {
+                onOpen();
+            }
+        }
+
+        //------------------------------------------------------------------
 
         return (
-            <Menu>
-                
-                <MenuButton isActive={isOpen} as={Button} rightIcon = {arrow}>
-                    Score Scope
+            <Menu>  
+                <MenuButton 
+                    as={Button} isActive={isOpen} rightIcon = {arrow} onClick = {handleMenu}
+                >
+                    <Heading size = 'md' style = {{color: 'black'}}>Score Scope</Heading>
                 </MenuButton>
 
                 <MenuList>
-
                     <MenuItem>
-                        <LogIn />
-                    </MenuItem>
+                        {auth.currentUser === null ? (
 
-                    <MenuItem>
-                        <Button onClick = {() => {
-                            handleLogOut();
-                        }}>Log Out</Button>
+                            <VStack
+                                divider={<StackDivider borderColor='gray.200' />}
+                                spacing = {2}
+                                align = 'flex-start'
+                            >
+                                <LogIn/>
+                                <CreateAccount />
+                            </VStack>
+                           
+                        ) : ( 
+                            <Button onClick = {handleLogOut}>Log Out</Button>
+                        )}
                     </MenuItem>
-
-                    <MenuItem>
-                        <CreateAccount>Create Account</CreateAccount>
-                    </MenuItem>
-                    
                 </MenuList>
             </Menu>
         )  
     }
 
     
-
     //------------------------------------------------------------------
 
     function CustomLink({ to, children }) {
@@ -112,20 +131,19 @@ export default function NavBar() {
 
     //------------------------------------------------------------------
 
-    //Main Nav Return:
-
     return (
 
         <div className = "nav">
 
-            
             <div className = "nav-section">
                 <SignAction/>
-                <Button rightIcon = {<Icon path = {mdiWalletPlus} size = {1}/>}>Deposit</Button>
+
+                <Button rightIcon = {<Icon path = {mdiWalletPlus} size = {1}/>}>
+                    Deposit
+                </Button>
             </div>
 
             <div className = "nav-section">
-
                 <CustomLink to = "/">
                     <Button>Parlay</Button>
                 </CustomLink>
@@ -146,8 +164,6 @@ export default function NavBar() {
                     <Button>Profile</Button>
                 </CustomLink>
             </div>
-
         </div>
     ); 
 }
-
