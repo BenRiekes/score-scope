@@ -27,7 +27,8 @@ const LogIn = () => {
 
     //Import State:
     const navigate = useNavigate(); 
-    const { isOpen, onOpen, onClose } = useDisclosure(); 
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [loginInLoading, setLoginLoading] = useState(false); 
 
     //State:
     const [email, setEmail] = useState(''); 
@@ -58,17 +59,28 @@ const LogIn = () => {
 
     const handleLogIn = () => {
 
+        setLoginLoading(true);
         const password = passwordMap.get(0).join('');
 
-        signInWithEmailAndPassword(getAuth(), email, password).then (userCredential => {
+        setTimeout(() => {
 
-            onClose();
-            window.location.reload();
+            signInWithEmailAndPassword(getAuth(), email, password).then (userCredential => {
 
-        }).catch(error => {
-            console.log("An error occured " + error); 
-            alert ("An error occured while logging in"); 
-        })
+                if (!userCredential) {
+                    alert("Incorrect username or password");
+                    return 
+                } 
+    
+                setLoginLoading(false); onClose();
+                window.location.reload();
+    
+            }).catch(error => {
+                setLoginLoading(false);
+                alert ("An error occured while logging in"); 
+            })
+
+        }, 1000)
+
     }
 
     
@@ -130,7 +142,10 @@ const LogIn = () => {
                                     </HStack>
                                 </Box>
                                 
-                                <Button colorScheme = 'purple' varient = 'solid' onClick = {handleLogIn}>Log In</Button>
+                                <Button colorScheme = 'purple' varient = 'solid'
+                                 isLoading = {loginInLoading} onClick = {handleLogIn}
+                                >
+                                Log In</Button>
                             </VStack>
 
                         </FormControl>

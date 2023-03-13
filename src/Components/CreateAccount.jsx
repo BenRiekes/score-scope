@@ -26,7 +26,7 @@ const CreateAccount = () => {
     const [creationLoading, setCreationLoading] = useState(false);
     
 
-    const [age, setAge] = useState(); 
+    const [age, setAge] = useState(18); 
     const [email, setEmail] = useState('');
     const [gender, setGender] = useState('');
     const [username, setUsername] = useState('');  
@@ -41,6 +41,10 @@ const CreateAccount = () => {
         [1, {genderVal: 'Female', checked: false}],
         [2, {genderVal: 'Other', checked: false}]
     ]));
+
+    useEffect(() => {
+        console.log(age);
+    },[age]);
 
     //------------------------------------------------------------------
 
@@ -305,21 +309,12 @@ const CreateAccount = () => {
                                     <FormLabel>Age</FormLabel>
 
                                     <NumberInput
-                                        size = 'md'
-                                        maxW = {32}
-                                        min = {18}
-                                        max = {100}
+                                        size = 'md'maxW = {32} min = {18} max = {100}
                                         defaultValue = {18}
                                         keepWithinRange={true}
                                         clampValueOnBlur={true}
-                                    >
-                                        
+                                    > 
                                         <NumberInputField onChange = {(event) => setAge(event.target.value)}/>
-                                        <NumberInputStepper>
-                                            <NumberIncrementStepper/>
-                                            <NumberDecrementStepper/>
-                                        </NumberInputStepper>
-
                                     </NumberInput>
                                             
                                     <FormHelperText>Must be 18 or older</FormHelperText>
