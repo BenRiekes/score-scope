@@ -1,21 +1,26 @@
 //React:
 import React from "react"; 
-import { useState, useRef, useEffect } from "react";
-import CreateValidation from "../Functions/CreateValidation";
+import { useState, useRef, useEffect, useReducer } from "react";
 
+//Firebase: 
 import firebase from 'firebase/compat/app';
 import { auth, db } from "../firebase-config";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { httpsCallable, getFunctions } from "firebase/functions";
 
 
+//Functions:
+import { 
+    checkAll, checkEmail, checkUsername, checkPassword,
+    checkSetPassword, checkAge, checkGender, checkSpecific
+} from "../Functions/CreateValidation";
+
 //Styles:
 import { 
     Modal, ModalHeader, ModalBody, ModalContent,  
-    ModalOverlay, ModalFooter, ModalCloseButton, FormControl, 
+    ModalOverlay, ModalCloseButton, FormControl, 
     FormLabel, FormErrorMessage, FormHelperText, PinInputField, 
-    PinInput, Checkbox, StackDivider,  VStack, HStack, Input, Button, Box, useDisclosure, NumberInput, NumberInputField,
-    NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, Spinner
+    Checkbox, StackDivider,  VStack, HStack, Input, Button, Box, useDisclosure, NumberInput, NumberInputField,
          
 } from "@chakra-ui/react";
 
@@ -23,64 +28,121 @@ import {
 const CreateAccount = () => {
 
     const { isOpen, onOpen, onClose } = useDisclosure(); 
-    const [creationLoading, setCreationLoading] = useState(false);
     
+    const [form, setForm] = useState({
+        email: '', username: '', password: '', 
+        setPassword: '', age: 0, gender: ''
+    });
 
-    const [age, setAge] = useState(18); 
-    const [email, setEmail] = useState('');
-    const [gender, setGender] = useState('');
-    const [username, setUsername] = useState('');  
+    const [genderBox, setGenderBox] = useState({
+        'Male': false, 'Female': false, 'Other': false
+    }); 
+    
+    const [invalid, setInvalid] = useState({
+        email: {error: false, message: ''},
+        username: {error: false, message: ''},
+        password: {error: false, message: ''},
+        setPassword: {error: false, message: ''}, 
+        age: {error: false, message: ''},
+        gender: {error: false, message: ''},
+    });
 
-    const [passwordMap, setPasswordMap] = useState(new Map([
-        [0, ['', '','','','','']],
-        [1, ['','','','','','']]
-    ])); 
+   
+    //------------------------------------------------------------------
 
-    const [genderMap, setGenderMap] = useState(new Map([
-        [0, {genderVal: 'Male', checked: false}],
-        [1, {genderVal: 'Female', checked: false}],
-        [2, {genderVal: 'Other', checked: false}]
-    ]));
+    const handleClose = () => {
+        onClose();
 
-    useEffect(() => {
-        console.log(age);
-    },[age]);
+        setForm({
+            email: '', username: '', password: '', 
+            setPassword: '', age: 0, gender: ''
+        }); 
+
+        setGenderBox({
+            'Male': false, 'Female': false, 'Other': false
+        })
+
+        setInvalid({
+            email: {error: false, message: ''},
+            username: {error: false, message: ''},
+            password: {error: false, message: ''},
+            setPassword: {error: false, message: ''}, 
+            age: {error: false, message: ''},
+            gender: {error: false, message: ''},
+        })
+    }
+
+    //------------------------------------------------------------------
+
+    const handleForm = (e) => {
+        e.preventDefault();
+        setForm(prev => ({...prev, [e.target.name]: e.target.value}));
+
+        if (e.target.name == 'setPassword') {
+            setInvalid(prev => ({...prev, [e.target.name]: checkSetPassword(e.target.value, form.password)}));
+        } else {
+            setInvalid(prev => ({...prev, [e.target.name]: checkSpecific(e.target.name, e.target.value)}));
+        }
+    }
+
+    //------------------------------------------------------------------
+
+    const handleCheckbox = (e) => {
+        e.preventDefault();
+
+        const getTrueKeys = () => {
+            let trueKeys = []; 
+            const keys = ['Male', 'Female', 'Other']; 
+            
+            for (let i = 0; i < keys.length; i++) {
+                if (genderBox[keys[i]] === true) {
+                    trueKeys.push(keys[i]); 
+                }
+            }
+            return trueKeys; 
+        }
+
+        const trueKeys = getTrueKeys();
+
+        switch (true) {
+            case !trueKeys: // All boxes empty
+                setGenderBox(prev => ({ ...prev, [e.target.value]: true }));
+                setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+                break;
+          
+            case trueKeys[0] != e.target.value: // One box to another
+                setGenderBox(prev => ({...prev, [trueKeys[0]]: false, [e.target.value]: true}));
+                setForm(prev => ({...prev, [e.target.name]: e.target.value}));
+
+                setInvalid(prev => ({   //Being weird in create validation
+                    ...prev, 
+                    gender: ({error: false, message: 'false'})
+                })); 
+                break;
+            case trueKeys[0] === e.target.value: // Uncheck box
+                setGenderBox(prev => ({...prev, [e.target.value]: false}));
+                setForm(prev => ({...prev, [e.target.name]: ''}));  
+                
+                setInvalid(prev => ({   //Being weird in create validation
+                    ...prev, 
+                    gender: ({error: true, message: 'Gender selection required'})
+                })); 
+              break;
+            default:
+              break;
+        }
+
+
+    }
 
     //------------------------------------------------------------------
 
     const createUser = async () => {
 
-        setCreationLoading(true);
-
-        const password1 = passwordMap.get(0).join('');
-        const password2 = passwordMap.get(1).join('');
-
-        const formParams = {
-            password: [
-                password1,
-                password2
-            ],
-            username: username, 
-            gender: gender,
-            age: age
-        }
-
-        //-----------------------------------------------------
-
-        const form = await CreateValidation(formParams); 
-
-        if (form.isValid === false) {
-            setCreationLoading(false);
-            alert (form.reason);
-            return; 
-        }
-
-        //-----------------------------------------------------
 
         //Firebase auth createion and handeling: 
-        const userCredential =  await createUserWithEmailAndPassword(auth, email, password1).catch (error => {
+        const userCredential =  await createUserWithEmailAndPassword(auth, form.email, form.password).catch (error => {
 
-            setCreationLoading(false);
             let errorCode = error.message; 
 
             switch (errorCode) {
@@ -102,7 +164,6 @@ const CreateAccount = () => {
         //-----------------------------------------------------
 
         if (!userCredential) {
-            setCreationLoading(false);
             return; 
 
         }  else {
@@ -113,91 +174,27 @@ const CreateAccount = () => {
             const response = await firebaseCreateAccount ({
 
                 uid: userCredential.user.uid,
-                username: username,  
-                gender: gender,
-                email: email,
-                age: parseInt(age)
+                username: form.username,  
+                gender: form.gender,
+                email: form.email,
+                age: form.age
 
             })
             
             if (response.data.isValid === false) {
-                setCreationLoading(false);
                 alert("An error occured while creating your account");
                 return; 
 
             } else {
-                setCreationLoading(false); onClose();
+                onClose();
                 alert("Account successfully created"); 
                 window.location.reload();
                 return; 
             }   
   
         }
-    }
-
-  
-    //------------------------------------------------------------------
-
-    const handlePassword = (passwordIndex, charIndex, newChar, keyCode) => {
-
-        const mapCopy = new Map(passwordMap);
-        const charArray = mapCopy.get(passwordIndex); 
-
-        if (keyCode === 8) {
-            charArray[charIndex] = '';
-        } else {
-            charArray[charIndex] = newChar;
-        }   
-
-        mapCopy.set(passwordIndex, charArray); 
-        setPasswordMap(mapCopy);  
-    }   
-
-    //------------------------------------------------------------------
-
-    const toggleGender = (boxKey) => {
-
-        const mapCopy = new Map(genderMap); 
-        let boxObj = mapCopy.get(boxKey);
-
-        const prevCheck = () => {
-
-            for (let i = 0; i < mapCopy.size; i++) {
-
-                if (mapCopy.get(i).checked === true && i != boxKey) {
-                    return i; 
-                }
-            }
-            return undefined; 
-        }
-
-        //------------------------------------------------------------------
-        
-        if (boxObj.checked) { boxObj.checked = false;
-
-            mapCopy.set(boxKey, boxObj)
-            setGender(undefined); 
-    
-        } else { boxObj.checked = true; 
-
-            if (prevCheck() === undefined) {
-                mapCopy.set(boxKey, boxObj);
-                setGender(boxObj.genderVal); 
-            
-            } else {
-
-                let prevKey = prevCheck();
-                let prevObj = mapCopy.get(prevKey); 
-                prevObj.checked = false; 
-
-                mapCopy.set(prevKey, prevObj)
-                mapCopy.set(boxKey, boxObj)
-                setGender(boxObj.genderVal);   
-            }
-        }
-
-        setGenderMap(mapCopy);
-    }
+    }    
+   
 
     //------------------------------------------------------------------
     
@@ -207,11 +204,11 @@ const CreateAccount = () => {
             <Button onClick={onOpen}>Create Account</Button>
 
             <Modal 
-                size = 'md'
+                size = 'lg'
                 maxH = '30%'
                 scrollBehavior = 'inside'
                 motionPreset = 'slideInBottom'
-                isOpen = {isOpen} isCentered onClose = {onClose}
+                isOpen = {isOpen} isCentered onClose = {handleClose}
                 
             >
                 <ModalOverlay />
@@ -232,135 +229,147 @@ const CreateAccount = () => {
                             >
 
                                 <Box>
-                                    <FormLabel>Email Address</FormLabel>
-                                    <Input 
-                                        type = 'email' 
-                                        onChange = {(event) => setEmail(event.target.value)}
-                                    />
-                                    <FormHelperText>We'll never share your email</FormHelperText>
+                                    <FormControl isInvalid = {invalid.email.error}>
+                                        <FormLabel>Email Address</FormLabel>
+
+                                        <Input type = 'email' name = 'email' 
+                                            onChange = {handleForm}
+                                        />
+
+                                        {invalid.email.error ? (
+                                            <FormErrorMessage>
+                                                {invalid.email.message}
+                                            </FormErrorMessage>
+                                        ) : (
+                                            <div/>
+                                        )}
+                                    </FormControl>
+                                    
                                 </Box>
 
                                 <Box>
-                                    <FormLabel m={2}>Username</FormLabel>
-                                    <Input 
-                                        type = 'username' 
-                                        onChange = {(event) => setUsername(event.target.value)}
+                                    <FormControl isInvalid = {invalid.username.error}>
+
+                                        <FormLabel m={2}>Username</FormLabel>
+
+                                        <Input 
+                                            type = 'username' name = 'username'  
+                                            onChange = {handleForm}
+                                        />
+
+                                        {invalid.username.error ? (
+                                            <FormErrorMessage>
+                                                {invalid.username.message}
+                                            </FormErrorMessage>
+                                        ) : (
+                                            <div/>
+                                        )}
+                                    </FormControl>
                                         
-                                    />
-                                    <FormHelperText>Username must be at least 3 characters, alphanumeric </FormHelperText>
                                 </Box>
                                 
                                 <Box>
-                                    <FormLabel>Password</FormLabel>
+                                    <FormControl isInvalid = {invalid.password.error}>
+                                        <FormLabel>Password</FormLabel>
 
-                                    <HStack>
-                                        <PinInput type = 'alphanumeric'>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 0, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 1, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 2, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 3, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 4, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 5, event.target.value, event.target.keyCode)}/>
-                                        </PinInput>
-                                    </HStack>
+                                        <Input 
+                                            type = 'password' name = 'password'  
+                                            onChange = {handleForm}
+                                        />
 
-                                    <FormHelperText>Password must be 6 characters, alphanumeric </FormHelperText>   
+                                        {invalid.password.error ? (
+                                            <FormErrorMessage>
+                                                {invalid.password.message}
+                                            </FormErrorMessage>
+                                        ) : (
+                                            <div/>
+                                        )}
+                                        
+                                    </FormControl>  
                                 </Box>
 
                                 <Box>
-                                    <FormLabel>Confirm Password</FormLabel>
-                                    <HStack>
-                                        <PinInput type = 'alphanumeric'>
-                                        <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (1, 0, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (1, 1, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (1, 2, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (1, 3, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (1, 4, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (1, 5, event.target.value, event.target.keyCode)}/>
-                                        </PinInput>
-                                    </HStack>
+                                    <FormControl isInvalid = {invalid.setPassword.error}>
+                                        <FormLabel>Confirm Password</FormLabel>
+                                        
+                                        <Input 
+                                            type = 'password' name = 'setPassword'  
+                                            onChange = {handleForm}
+                                        />
+
+                                        {invalid.setPassword.error ? (
+                                            <FormErrorMessage>
+                                                {invalid.setPassword.message}
+                                            </FormErrorMessage>
+                                        ) : (
+                                            <div/>
+                                        )}
+                                    </FormControl>  
                                 </Box>
 
                                 <Box>
-                                    <FormLabel>Age</FormLabel>
+                                    <FormControl isInvalid = {invalid.age.error}>
+                                        <FormLabel>Age</FormLabel>
 
-                                    <NumberInput
-                                        size = 'md'maxW = {32} min = {18} max = {100}
-                                        defaultValue = {18}
-                                        keepWithinRange={true}
-                                        clampValueOnBlur={true}
-                                    > 
-                                        <NumberInputField onChange = {(event) => setAge(event.target.value)}/>
-                                    </NumberInput>
-                                            
-                                    <FormHelperText>Must be 18 or older</FormHelperText>
+                                        <Input maxW = {32}
+                                            type = 'number' name = 'age'  
+                                            onChange = {handleForm}
+                                        />
+
+                                        {invalid.age.error ? (
+                                            <FormErrorMessage>
+                                                {invalid.age.message}
+                                            </FormErrorMessage>
+                                        ) : (
+                                            <div/>
+                                        )}
+                                    </FormControl>
                                 </Box>
                                 
                                 <Box> 
-                                    <FormLabel>Gender</FormLabel>
+                                    <FormControl isInvalid = {invalid.gender.error}>
+                                        <FormLabel>Gender</FormLabel>
 
-                                    <HStack>
-                                        <Checkbox
-                                            size = 'md'
-                                            colorScheme = 'teal'
-                                            isChecked = {genderMap.get(0).checked}
+                                        <HStack>
+                                            <Checkbox
+                                                size = 'md'
+                                                colorScheme = 'purple' isChecked = {genderBox['Male']}
+                                                name = 'gender' value = 'Male'
 
-                                            onChange = {() => {
-                                                toggleGender(0);
-                                            }}
-                                        >Male</Checkbox>
-                                        
-                                        <Checkbox
-                                            size = 'md'
-                                            colorScheme = 'teal'    
-                                            isChecked = {genderMap.get(1).checked}
+                                                onChange = {(e) => handleCheckbox(e)}
+                                            >Male</Checkbox>
+                                            
+                                            <Checkbox
+                                                size = 'md' colorScheme = 'purple' isChecked = {genderBox['Female']}
+                                                name = 'gender' value = 'Female'
 
-                                            onChange = {() => {
-                                                toggleGender(1);
-                                            }}
-                                        >Female</Checkbox>
+                                                onChange = {handleCheckbox}
+                                            >Female</Checkbox>
 
-                                        <Checkbox
-                                            size = 'md'
-                                            colorScheme = 'teal'
-                                            isChecked = {genderMap.get(2).checked}
+                                            <Checkbox
+                                                size = 'md' colorScheme = 'purple' isChecked = {genderBox['Other']}
+                                                name = 'gender' value = 'Other'
 
-                                            onChange = {() => {
-                                                toggleGender(2);
-                                            }}
-   
-                                        >Other</Checkbox>
-                                    </HStack>
+                                                onChange = {(e) => handleCheckbox(e)}
+                                            >Other</Checkbox>
+                                        </HStack>
+
+                                        {invalid.gender.error ? (
+                                            <FormErrorMessage>
+                                                {invalid.gender.message}
+                                            </FormErrorMessage>
+                                        ) : (
+                                            <div/>
+                                        )}
+                                    </FormControl>
+                                    
+
+                                    
                                 </Box>
                                     
                                 
                                 <Button 
                                     colorScheme = 'purple' varient = 'solid'
-                                    isLoading = {creationLoading}
                                     onClick = {createUser}
                                 >   
                                     Create

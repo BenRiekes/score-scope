@@ -22,24 +22,10 @@ exports.createUser = functions.https.onCall(async (data, context) => {
 
         //------------------------------------------------------------------
 
-        const validGenders = ['Male', 'Female', 'Other']; 
-
-        if (!uid) resolve ({isValid: false, reason: "No UID present"});
-        if (age < 18) resolve ({isValid: false, reason: "Must be 18 or older"}); 
-        
-        for (let i = 0; i < validGenders.length; i++) {
-           
-            if (validGenders[i] != gender && i === 2) {
-                resolve ({isValid: false, reason: "Invalid gender selection"}); 
-
-            } else {
-                break; 
-            }
-        }
-        
+        if (!uid) reject ({isValid: false, reason: "No UID present"});
+       
         //------------------------------------------------------------------
 
-        
         await admin.firestore().collection('users').doc(uid).set ({
 
             age: age,
@@ -76,7 +62,7 @@ exports.createUser = functions.https.onCall(async (data, context) => {
         }).catch (error => {
             
             functions.logger.error(error); 
-            resolve ({isValid: true, reason: "An error occured while creating your account"});
+            reject ({isValid: true, reason: "An error occured while creating your account"});
         })
 
     })

@@ -2,71 +2,202 @@
 //Firebase:
 import {query, where, getDocs, collection, getFirestore } from "firebase/firestore";
 
-//Create Account Functions: --------------------------------------------------------------
+//Validators: --------------------------------------------------------------
 
-const validUsername = async(username) => {
+const valueExist = async(field, value) => {
 
     const db = getFirestore();
+    const q = query(collection(db, 'users'), where(field, '==', value)); 
+    const querySnapshot = await getDocs(q);
 
-    const q = query(collection(db, 'users'), where('username', '==', username)); 
-    const querySnapshot = await getDocs(q); 
+    if (querySnapshot) return true; 
+
+    return false; 
+}
+
+// --------------------------------------------------------------
+
+export const checkEmail = (email) => {
+ 
+    switch (true) {
+        case email === '' :
+            return ({error: true, message: 'email is required'}); 
+        
+        case valueExist('email', email) === true :
+            return ({error: true, message: 'email already in use'});
+
+        default:
+            return ({error: false, message: ''});   
+    }  
+}
+
+// --------------------------------------------------------------
+
+export const checkUsername = (username) => {
+
+    const regex = /^[a-zA-Z0-9._]+$/;
     
-    if (querySnapshot.length === 0) {
-
-        const regex = /^[a-zA-Z0-9._]+$/;
-
-        if (regex.test(username) === false) {
-
-            return ({
-                isValid: false,
-                reason: "Usernames must consist of only letters, numbers, periods, and underscores"
-            })
-
-        } else if (username.length > 20) {
-
-            return ({
-                isValid: false,
-                reason: "Usernames can not exceed 20 characters"
-            });
-        }
-
-        return ({isValid: true, reason: undefined}); 
-    }
-
-    return ({isValid: false, reason: undefined}); 
-}
-
-//--------------------------------------------------------------
-
-const CreateValidation = async(formParams) => {
-
-   
-    switch (formParams) {
-
-        case formParams.password[0] != formParams.password[1] :
-            return ({isValid: false, reason: "Passwords do not match"});
-
-        case formParams.password[0].length != 6 || formParams.password[1] != 6 :
-            return ({isValid: false, reason: "Passwords mus be 6 alphanumeric characters"}); 
-
-        case validUsername(formParams.username).isValid === false :
-            return ({isValid: false, reason: validUsername(formParams.username).reason}); 
-        
-        case formParams.gender != "Male" || formParams.gender != "Female" || formParams.gender != "Other" :
-            return ({isValid: false, reason: "Gender must be either Male, Female, or Other"}); 
-        
-        case formParams.age < 18 : 
-            return ({isValid: false, reason: "You must be older than 18 to create an account"});
+    switch (true) {
+        case username === '' :
+            return ({error: true, message: 'email is required'}); 
             
-        default :
-            return ({isValid: true, reason: undefined});     
+        case username.length < 3 :
+            return ({error: true, message: 'Usernames must be > 3 characters'});
+
+        case regex.test(username) === false :
+            return ({error: true, message: 'Usernames must consist of only letters, numbers, periods, and underscores'}); 
+
+        case valueExist('username', username) === true :
+            return ({error: true, message: 'Username already exist'}); 
+
+        default: 
+            return ({error: false, message: ''}); 
+
+    }
+}
+
+// --------------------------------------------------------------
+
+export const checkPassword = (password) => {
+
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!^&#])[a-zA-Z0-9!^&#]*$/;
+
+    switch (true) {
+
+        case password.length < 7 :
+            return ({error: true, message: 'Password must be at least 7 characters long'});
+
+        case regex.test(password) === false :
+            return ({
+                error: true, 
+                message: 'Must consist of numbers, one uppercase, one lowercase, and one special character (^ & # !)'
+            }); 
+
+        default : 
+            return ({error: false, message: ''}); 
     }
 }
 
 //--------------------------------------------------------------
 
+export const checkSetPassword = (setPassword, password) => {
 
+    switch (true) {
 
+        case setPassword != password :
+            return ({error: true, message: 'passwords do not match'});
+        
+        default :
+            return ({error: false, message: ''}); 
+    }
+}
 
+//--------------------------------------------------------------
 
-export default CreateValidation;
+export const checkAge = (age) => {
+
+    const regexAge = /^(1[8-9]|[2-9]\d|100)$/;
+    const regexInput = /^\d+$/;
+
+    switch (true) {
+        case regexInput.test(age) === false :
+            return ({error: true, message: 'Numbers only'});
+
+        case regexAge.test(age) === false :
+            return ({error: true, message: 'Must be between 18 and 100 to create an account'});
+
+        default :
+            return ({error: false, message: ''}); 
+    }
+}
+
+//--------------------------------------------------------------
+
+export const checkGender = (gender, genderBox) => {
+
+    //FIX ME: UNDEFINED SOMEHOW GETTING PASSED IN FROM HANDLECHECKBOX
+    const keys = ['Male', 'Female', 'Other']; 
+
+    const genderExist = () => {
+
+        for (let i = 0; i < keys.length; i++) {
+            if (gender === keys[i]) {
+                return true; 
+            }
+        }
+        return false; 
+    }
+
+    const boxState = () => {
+
+        console.log(genderBox[keys['Male']]);
+
+        for (let i = 0; i < keys.length; i++) {
+    
+            if (genderBox[keys[i]] === true) {
+                return true; 
+            }
+        }
+        return false; 
+    }
+
+    switch (true) {
+
+        case genderExist() != true :
+            return ({error: true, message: 'Invalid gender selection'}); 
+
+        case boxState() != true :
+            return ({error: true, message: 'Gender selection required'}); 
+
+        default :
+            return ({error: false, message: ''}); 
+    }   
+}
+
+//--------------------------------------------------------------
+
+export const checkAll = (formObject) => {
+    
+
+    const repsonseObj = ({
+        0: checkEmail(formObject.email),
+        1: checkUsername(formObject.username),
+        2: checkPassword(formObject.password),
+        3: checkSetPassword(formObject.setPassword, formObject.password),
+        4: checkAge(formObject.age),
+        5: checkGender(formObject.gender)
+    });
+
+    for (let i = 0; i <= 5; i++) {
+
+        if (repsonseObj[i].error === true) {
+            return true; 
+        }
+    }
+
+    return false; 
+}
+
+//--------------------------------------------------------------
+
+export const checkSpecific = (field, val) => {
+
+    switch (field) {
+        case 'email' :
+            return checkEmail(val); 
+        case 'username' :
+            return checkUsername(val); 
+        case 'password' :
+            return checkPassword(val); 
+        case 'setPassword' :
+            return checkSetPassword(val); 
+        case 'age' :
+            return checkAge(val); 
+        case 'gender' :
+            return checkGender(val); 
+        default :
+            return; 
+    }
+}
+
+//--------------------------------------------------------------
