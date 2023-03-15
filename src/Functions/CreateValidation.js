@@ -4,28 +4,25 @@ import {query, where, getDocs, collection, getFirestore } from "firebase/firesto
 
 //Validators: --------------------------------------------------------------
 
-const valueExist = async(field, value) => {
+export const valueExist = async(field, value) => {
 
     const db = getFirestore();
     const q = query(collection(db, 'users'), where(field, '==', value)); 
     const querySnapshot = await getDocs(q);
 
-    if (querySnapshot) return true; 
+    if (querySnapshot.docs) return true; 
 
     return false; 
 }
 
 // --------------------------------------------------------------
 
-export const checkEmail = (email) => {
+export const checkEmail = (email) => { 
  
     switch (true) {
         case email === '' :
             return ({error: true, message: 'email is required'}); 
         
-        case valueExist('email', email) === true :
-            return ({error: true, message: 'email already in use'});
-
         default:
             return ({error: false, message: ''});   
     }  
@@ -84,7 +81,7 @@ export const checkSetPassword = (setPassword, password) => {
 
     switch (true) {
 
-        case setPassword != password :
+        case setPassword !== password :
             return ({error: true, message: 'passwords do not match'});
         
         default :
@@ -115,57 +112,56 @@ export const checkAge = (age) => {
 
 export const checkGender = (gender, genderBox) => {
 
-    //FIX ME: UNDEFINED SOMEHOW GETTING PASSED IN FROM HANDLECHECKBOX
-    const keys = ['Male', 'Female', 'Other']; 
+    // //FIX ME: UNDEFINED SOMEHOW GETTING PASSED IN FROM HANDLECHECKBOX
+    // const keys = ['Male', 'Female', 'Other']; 
 
-    const genderExist = () => {
+    // const genderExist = () => {
 
-        for (let i = 0; i < keys.length; i++) {
-            if (gender === keys[i]) {
-                return true; 
-            }
-        }
-        return false; 
-    }
+    //     for (let i = 0; i < keys.length; i++) {
+    //         if (gender === keys[i]) {
+    //             return true; 
+    //         }
+    //     }
+    //     return false; 
+    // }
 
-    const boxState = () => {
+    // const boxState = () => {
 
-        console.log(genderBox[keys['Male']]);
+    //     console.log(genderBox[keys['Male']]);
 
-        for (let i = 0; i < keys.length; i++) {
+    //     for (let i = 0; i < keys.length; i++) {
     
-            if (genderBox[keys[i]] === true) {
-                return true; 
-            }
-        }
-        return false; 
-    }
+    //         if (genderBox[keys[i]] === true) {
+    //             return true; 
+    //         }
+    //     }
+    //     return false; 
+    // }
 
-    switch (true) {
+    // switch (true) {
 
-        case genderExist() != true :
-            return ({error: true, message: 'Invalid gender selection'}); 
+    //     case genderExist() != true :
+    //         return ({error: true, message: 'Invalid gender selection'}); 
 
-        case boxState() != true :
-            return ({error: true, message: 'Gender selection required'}); 
+    //     case boxState() != true :
+    //         return ({error: true, message: 'Gender selection required'}); 
 
-        default :
-            return ({error: false, message: ''}); 
-    }   
+    //     default :
+    //         return ({error: false, message: ''}); 
+    // }   
 }
 
 //--------------------------------------------------------------
 
 export const checkAll = (formObject) => {
     
-
     const repsonseObj = ({
-        0: checkEmail(formObject.email),
-        1: checkUsername(formObject.username),
-        2: checkPassword(formObject.password),
-        3: checkSetPassword(formObject.setPassword, formObject.password),
-        4: checkAge(formObject.age),
-        5: checkGender(formObject.gender)
+        0: formObject.email,
+        1: formObject.username,
+        2: formObject.password,
+        3: formObject.setPassword,
+        4: formObject.age,
+        5: formObject.gender
     });
 
     for (let i = 0; i <= 5; i++) {
@@ -193,11 +189,12 @@ export const checkSpecific = (field, val) => {
             return checkSetPassword(val); 
         case 'age' :
             return checkAge(val); 
-        case 'gender' :
-            return checkGender(val); 
+        // case 'gender' :
+        //     return checkGender(val); 
         default :
             return; 
     }
 }
 
 //--------------------------------------------------------------
+

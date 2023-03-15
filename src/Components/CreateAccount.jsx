@@ -12,7 +12,7 @@ import { httpsCallable, getFunctions } from "firebase/functions";
 //Functions:
 import { 
     checkAll, checkEmail, checkUsername, checkPassword,
-    checkSetPassword, checkAge, checkGender, checkSpecific
+    checkSetPassword, checkAge, checkGender, checkSpecific, valueExist
 } from "../Functions/CreateValidation";
 
 //Styles:
@@ -28,6 +28,7 @@ import {
 const CreateAccount = () => {
 
     const { isOpen, onOpen, onClose } = useDisclosure(); 
+    const [submitting, setSumbitting] = useState(false);
     
     const [form, setForm] = useState({
         email: '', username: '', password: '', 
@@ -47,6 +48,7 @@ const CreateAccount = () => {
         gender: {error: false, message: ''},
     });
 
+    
    
     //------------------------------------------------------------------
 
@@ -70,6 +72,8 @@ const CreateAccount = () => {
             age: {error: false, message: ''},
             gender: {error: false, message: ''},
         })
+
+        setSumbitting(false);
     }
 
     //------------------------------------------------------------------
@@ -128,6 +132,7 @@ const CreateAccount = () => {
                     gender: ({error: true, message: 'Gender selection required'})
                 })); 
               break;
+
             default:
               break;
         }
@@ -139,60 +144,67 @@ const CreateAccount = () => {
 
     const createUser = async () => {
 
+        if (checkAll(form) === true) return; 
+        setSumbitting(true);
+        
+        setTimeout(async () => {
 
-        //Firebase auth createion and handeling: 
-        const userCredential =  await createUserWithEmailAndPassword(auth, form.email, form.password).catch (error => {
+            //Firebase auth createion and handeling: 
+            const userCredential =  await createUserWithEmailAndPassword(auth, form.email, form.password).catch (error => {
 
-            let errorCode = error.message; 
+                let errorCode = error.message; 
 
-            switch (errorCode) {
-    
-                case errorCode === 'auth/weak-password' : 
-                    alert ("Password is too weak"); 
-                    break; 
-                case errorCode === 'auth/email-already-in-use' :
-                    alert ("Account already exist");
-                    break; 
-                case errorCode == 'auth/invalid-email' :
-                    alert ("Invalid email"); 
-                default:
-                    alert (error.message); 
-                    break; 
-            }
-        })
-
-        //-----------------------------------------------------
-
-        if (!userCredential) {
-            return; 
-
-        }  else {
-
-            //Firebase function to call after create user isntance has been successfull
-            const firebaseCreateAccount = httpsCallable(getFunctions(), "createUser");
-            
-            const response = await firebaseCreateAccount ({
-
-                uid: userCredential.user.uid,
-                username: form.username,  
-                gender: form.gender,
-                email: form.email,
-                age: form.age
-
+                switch (errorCode) {
+        
+                    case errorCode === 'auth/weak-password' : 
+                        alert("weak password")
+                        break; 
+                    case errorCode === 'auth/email-already-in-use' :
+                        alert ("account already exist"); 
+                        break; 
+                    case errorCode == 'auth/invalid-email' :
+                        alert ("invalid email"); 
+                    default:
+                        alert (error.message); 
+                        break; 
+                }
             })
-            
-            if (response.data.isValid === false) {
-                alert("An error occured while creating your account");
+
+            //-----------------------------------------------------
+
+            if (!userCredential) {
+                setSumbitting(false);
                 return; 
 
-            } else {
-                onClose();
-                alert("Account successfully created"); 
-                window.location.reload();
-                return; 
-            }   
-  
-        }
+            }  else {
+
+                //Firebase function to call after create user isntance has been successfull
+                const firebaseCreateAccount = httpsCallable(getFunctions(), "createUser");
+                
+                const response = await firebaseCreateAccount ({
+
+                    uid: userCredential.user.uid,
+                    username: form.username,  
+                    gender: form.gender,
+                    email: form.email,
+                    age: form.age
+
+                })
+                
+                if (response.data.isValid === false) {
+                    alert("An error occured while creating your account");
+                    setSumbitting(false); 
+                    return; 
+
+                } else {
+                    onClose();
+                    alert("Account successfully created"); 
+                    window.location.reload();
+                    return; 
+                }   
+            }
+
+        }, 1000); 
     }    
    
 
@@ -213,169 +225,169 @@ const CreateAccount = () => {
             >
                 <ModalOverlay />
 
-                <ModalContent style = {{maxH:'20px'}}>
+                <ModalContent >
 
                     <ModalHeader>Create Account</ModalHeader>
                     <ModalCloseButton />
 
                     <ModalBody>
 
-                        <FormControl>
+                        
+                        <VStack
+                            align = 'stretch'
+                            spacing = {5}
+                            divider = {<StackDivider borderColor='gray.200' />}
+                        >
 
-                            <VStack
-                                align = 'stretch'
-                                spacing = {5}
-                                divider = {<StackDivider borderColor='gray.200' />}
-                            >
+                            <Box>
+                                <FormControl isInvalid = {invalid.email.error}>
+                                    <FormLabel>Email Address</FormLabel>
 
-                                <Box>
-                                    <FormControl isInvalid = {invalid.email.error}>
-                                        <FormLabel>Email Address</FormLabel>
+                                    <Input type = 'email' name = 'email' 
+                                        onChange = {handleForm}
+                                    />
 
-                                        <Input type = 'email' name = 'email' 
-                                            onChange = {handleForm}
-                                        />
-
-                                        {invalid.email.error ? (
-                                            <FormErrorMessage>
-                                                {invalid.email.message}
-                                            </FormErrorMessage>
-                                        ) : (
-                                            <div/>
-                                        )}
-                                    </FormControl>
-                                    
-                                </Box>
-
-                                <Box>
-                                    <FormControl isInvalid = {invalid.username.error}>
-
-                                        <FormLabel m={2}>Username</FormLabel>
-
-                                        <Input 
-                                            type = 'username' name = 'username'  
-                                            onChange = {handleForm}
-                                        />
-
-                                        {invalid.username.error ? (
-                                            <FormErrorMessage>
-                                                {invalid.username.message}
-                                            </FormErrorMessage>
-                                        ) : (
-                                            <div/>
-                                        )}
-                                    </FormControl>
-                                        
-                                </Box>
+                                    {invalid.email.error ? (
+                                        <FormErrorMessage>
+                                            {invalid.email.message}
+                                        </FormErrorMessage>
+                                    ) : (
+                                        <div/>
+                                    )}
+                                </FormControl>
                                 
-                                <Box>
-                                    <FormControl isInvalid = {invalid.password.error}>
-                                        <FormLabel>Password</FormLabel>
+                            </Box>
 
-                                        <Input 
-                                            type = 'password' name = 'password'  
-                                            onChange = {handleForm}
-                                        />
+                            <Box>
+                                <FormControl isInvalid = {invalid.username.error}>
 
-                                        {invalid.password.error ? (
-                                            <FormErrorMessage>
-                                                {invalid.password.message}
-                                            </FormErrorMessage>
-                                        ) : (
-                                            <div/>
-                                        )}
+                                    <FormLabel m={2}>Username</FormLabel>
+
+                                    <Input 
+                                        type = 'username' name = 'username'  
+                                        onChange = {handleForm}
+                                    />
+
+                                    {invalid.username.error ? (
+                                        <FormErrorMessage>
+                                            {invalid.username.message}
+                                        </FormErrorMessage>
+                                    ) : (
+                                        <div/>
+                                    )}
+                                </FormControl>
+                                    
+                            </Box>
+                            
+                            <Box>
+                                <FormControl isInvalid = {invalid.password.error}>
+                                    <FormLabel>Password</FormLabel>
+
+                                    <Input 
+                                        type = 'password' name = 'password'  
+                                        onChange = {handleForm}
+                                    />
+
+                                    {invalid.password.error ? (
+                                        <FormErrorMessage>
+                                            {invalid.password.message}
+                                        </FormErrorMessage>
+                                    ) : (
+                                        <div/>
+                                    )}
+                                    
+                                </FormControl>  
+                            </Box>
+
+                            <Box>
+                                <FormControl isInvalid = {invalid.setPassword.error}>
+                                    <FormLabel>Confirm Password</FormLabel>
+                                    
+                                    <Input 
+                                        type = 'password' name = 'setPassword'  
+                                        onChange = {handleForm}
+                                    />
+
+                                    {invalid.setPassword.error ? (
+                                        <FormErrorMessage>
+                                            {invalid.setPassword.message}
+                                        </FormErrorMessage>
+                                    ) : (
+                                        <div/>
+                                    )}
+                                </FormControl>  
+                            </Box>
+
+                            <Box>
+                                <FormControl isInvalid = {invalid.age.error}>
+                                    <FormLabel>Age</FormLabel>
+
+                                    <Input maxW = {32}
+                                        type = 'number' name = 'age'  
+                                        onChange = {handleForm}
+                                    />
+
+                                    {invalid.age.error ? (
+                                        <FormErrorMessage>
+                                            {invalid.age.message}
+                                        </FormErrorMessage>
+                                    ) : (
+                                        <div/>
+                                    )}
+                                </FormControl>
+                            </Box>
+                            
+                            <Box> 
+                                <FormControl isInvalid = {invalid.gender.error}>
+                                    <FormLabel>Gender</FormLabel>
+
+                                    <HStack>
+                                        <Checkbox
+                                            size = 'md'
+                                            colorScheme = 'purple' isChecked = {genderBox['Male']}
+                                            name = 'gender' value = 'Male'
+
+                                            onChange = {(e) => handleCheckbox(e)}
+                                        >Male</Checkbox>
                                         
-                                    </FormControl>  
-                                </Box>
+                                        <Checkbox
+                                            size = 'md' colorScheme = 'purple' isChecked = {genderBox['Female']}
+                                            name = 'gender' value = 'Female'
 
-                                <Box>
-                                    <FormControl isInvalid = {invalid.setPassword.error}>
-                                        <FormLabel>Confirm Password</FormLabel>
-                                        
-                                        <Input 
-                                            type = 'password' name = 'setPassword'  
-                                            onChange = {handleForm}
-                                        />
+                                            onChange = {handleCheckbox}
+                                        >Female</Checkbox>
 
-                                        {invalid.setPassword.error ? (
-                                            <FormErrorMessage>
-                                                {invalid.setPassword.message}
-                                            </FormErrorMessage>
-                                        ) : (
-                                            <div/>
-                                        )}
-                                    </FormControl>  
-                                </Box>
+                                        <Checkbox
+                                            size = 'md' colorScheme = 'purple' isChecked = {genderBox['Other']}
+                                            name = 'gender' value = 'Other'
 
-                                <Box>
-                                    <FormControl isInvalid = {invalid.age.error}>
-                                        <FormLabel>Age</FormLabel>
+                                            onChange = {(e) => handleCheckbox(e)}
+                                        >Other</Checkbox>
+                                    </HStack>
 
-                                        <Input maxW = {32}
-                                            type = 'number' name = 'age'  
-                                            onChange = {handleForm}
-                                        />
-
-                                        {invalid.age.error ? (
-                                            <FormErrorMessage>
-                                                {invalid.age.message}
-                                            </FormErrorMessage>
-                                        ) : (
-                                            <div/>
-                                        )}
-                                    </FormControl>
-                                </Box>
+                                    {invalid.gender.error ? (
+                                        <FormErrorMessage>
+                                            {invalid.gender.message}
+                                        </FormErrorMessage>
+                                    ) : (
+                                        <div/>
+                                    )}
+                                </FormControl>
                                 
-                                <Box> 
-                                    <FormControl isInvalid = {invalid.gender.error}>
-                                        <FormLabel>Gender</FormLabel>
 
-                                        <HStack>
-                                            <Checkbox
-                                                size = 'md'
-                                                colorScheme = 'purple' isChecked = {genderBox['Male']}
-                                                name = 'gender' value = 'Male'
-
-                                                onChange = {(e) => handleCheckbox(e)}
-                                            >Male</Checkbox>
-                                            
-                                            <Checkbox
-                                                size = 'md' colorScheme = 'purple' isChecked = {genderBox['Female']}
-                                                name = 'gender' value = 'Female'
-
-                                                onChange = {handleCheckbox}
-                                            >Female</Checkbox>
-
-                                            <Checkbox
-                                                size = 'md' colorScheme = 'purple' isChecked = {genderBox['Other']}
-                                                name = 'gender' value = 'Other'
-
-                                                onChange = {(e) => handleCheckbox(e)}
-                                            >Other</Checkbox>
-                                        </HStack>
-
-                                        {invalid.gender.error ? (
-                                            <FormErrorMessage>
-                                                {invalid.gender.message}
-                                            </FormErrorMessage>
-                                        ) : (
-                                            <div/>
-                                        )}
-                                    </FormControl>
-                                    
-
-                                    
-                                </Box>
-                                    
                                 
-                                <Button 
-                                    colorScheme = 'purple' varient = 'solid'
-                                    onClick = {createUser}
-                                >   
-                                    Create
-                                </Button>
-                            </VStack>                           
-                        </FormControl>
+                            </Box>
+                                
+                            
+                            <Button 
+                                colorScheme = 'purple' varient = 'solid'
+                                isLoading = {submitting} loadingText = 'Creating...'
+                                onClick = {createUser}
+                            >   
+                                Create
+                            </Button>
+                        </VStack>                           
+                        
 
                     </ModalBody>
                 </ModalContent>

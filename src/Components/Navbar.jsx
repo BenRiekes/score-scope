@@ -8,17 +8,24 @@ import { auth, db } from "../firebase-config";
 import { httpsCallable, getFunctions } from "firebase/functions";
 import { getAuth, createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword} from "firebase/auth"; 
 
-import GetUserBalance from "../Functions/GetBalance";
+import { getUserBalance, getUserAddress} from "../Functions/GetBalance";
+
 
 //Style:
 import LogIn from "./LogIn";
-import CreateAccount, { CreateAccounts } from "./CreateAccount";
+import CreateAccount from "./CreateAccount";
 
 import Icon from "@mdi/react";
 import "./CompStyles/NavbarStyles.css"; 
-import { mdiChevronDown, mdiChevronUp, mdiTarget, mdiWalletPlus } from "@mdi/js";
-import { Button, ButtonGroup, Heading, Menu, MenuButton, MenuList, MenuItem, 
-    useDisclosure, Divider, VStack, StackDivider
+
+import { 
+    mdiChevronDown, mdiChevronUp, 
+    mdiTarget, mdiWalletPlus 
+} from "@mdi/js";
+
+import { 
+    Button, ButtonGroup, Heading, Menu, 
+    MenuButton, MenuList, MenuItem, useDisclosure, Divider, VStack, StackDivider
 } from "@chakra-ui/react";
 
 
@@ -28,28 +35,27 @@ export default function NavBar() {
     //State:
     const auth = getAuth(); 
     const navigate = useNavigate();
+
     const [user, setUser] = useState(null); 
     const [userBalance, setUserBalance] = useState('?');
 
+
     useEffect(() => {
-
-        setUserBalance(GetUserBalance("0x5E8561573595a012b0a5b01ef66e4bcDF624Dd7F"));
-        console.log(userBalance);
-        
-        const loggedIn = auth.onAuthStateChanged((authUser) => {
-
-            if (auth.currentUser != undefined) {
-                setUser(authUser); 
-            } else {
-                setUser(null);
-                navigate("/"); 
-            }
-        });
-
-        return (loggedIn()); 
-
-    },[]);
+        if (user != null) {
+            setUserBalance(
+                getUserBalance(auth.currentUser.uid)
+            );
+        }
+    }, [user]);
+   
     
+    auth.onAuthStateChanged((response) => {
+        if (auth.currentUser != undefined) {
+            setUser(response); 
+        }
+    });
+
+   
     //------------------------------------------------------------------
 
     const handleLogOut = async () => {
@@ -163,6 +169,7 @@ export default function NavBar() {
                 <CustomLink to = "/profile">
                     <Button>Profile</Button>
                 </CustomLink>
+
             </div>
         </div>
     ); 

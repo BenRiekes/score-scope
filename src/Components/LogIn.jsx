@@ -27,71 +27,87 @@ const LogIn = () => {
 
     //Import State:
     const navigate = useNavigate(); 
+    
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const [loginInLoading, setLoginLoading] = useState(false); 
+    
+    const [form, setForm] = useState({
+        email: '',
+        password: ''
+    });
 
-    //State:
-    const [email, setEmail] = useState(''); 
-
-    const [passwordMap, setPasswordMap] = useState(new Map([
-        [0, ['', '','','','','']]
-    ])); 
-
-    const handlePassword = (passwordIndex, charIndex, newChar, keyCode) => {
-
-       
-        const mapCopy = new Map(passwordMap);
-        const charArray = mapCopy.get(passwordIndex); 
-
-        if (keyCode === 8) {
-            charArray[charIndex] = '';
-        } else {
-            charArray[charIndex] = newChar;
-        }   
-
-        mapCopy.set(passwordIndex, charArray); 
-        setPasswordMap(mapCopy);  
-    } 
-
-
+    const [invalid, setInvalid] = useState({
+        error: false,
+        message: ''
+    })
+    
+    const [loading, setLoading] = useState(false); 
 
     //------------------------------------------------------------------
 
-    const handleLogIn = () => {
+    const handleClose = () => {
+        onClose(); 
 
-        setLoginLoading(true);
-        const password = passwordMap.get(0).join('');
+        setForm({
+            email: '',
+            password: ''
+        })
 
-        setTimeout(() => {
+        setInvalid({
+            error: false,
+            message: ''
+        }); 
 
-            signInWithEmailAndPassword(getAuth(), email, password).then (userCredential => {
-
-                if (!userCredential) {
-                    alert("Incorrect username or password");
-                    return 
-                } 
-    
-                setLoginLoading(false); onClose();
-                window.location.reload();
-    
-            }).catch(error => {
-                setLoginLoading(false);
-                alert ("An error occured while logging in"); 
-            })
-
-        }, 1000)
-
+        setLoading(false);
     }
 
     
     //------------------------------------------------------------------
 
+    const handleForm = (e) => {
+        setForm(prev => ({...prev, [e.target.name]: e.target.value})); 
+    }
+
+    //------------------------------------------------------------------
+
+    const handleLogIn = () => {
+
+        setLoading(true); 
+
+        setTimeout(() => {
+
+            signInWithEmailAndPassword(getAuth(), form.email, form.password).then (userCredential => {
+
+                if (!userCredential) {
+                    setLoading(false); 
+                    setInvalid({error: true, message: 'Incorrect username or password'});
+                    return; 
+                } 
+
+                onClose(); 
+                window.location.reload();
+    
+            }).catch(error => {
+                setLoading(false);
+                setInvalid({error: true, message: 'Incorrect username or password'}); 
+                return; 
+            })
+
+        }, 500)
+    }
+
+    //------------------------------------------------------------------
+
     return (
 
         <>
-            <Button onClick={onOpen}>Log In</Button>
+            <Button onClick = {onOpen}>Log In</Button>
 
-            <Modal isCentered size = 'md' motionPreset = 'slideInBottom' onClose = {onClose} isOpen = {isOpen} >
+            <Modal 
+                size = 'md' 
+                isCentered 
+                motionPreset = 'slideInBottom'  
+                isOpen = {isOpen} onClose = {handleClose} 
+            >
 
                 <ModalOverlay />
 
@@ -102,56 +118,71 @@ const LogIn = () => {
 
                     <ModalBody>
 
-                        <FormControl>
+                        <VStack 
+                            align = 'stretch'
+                            spacing = {5}
+                            divider = {<StackDivider borderColor='gray.200' />}
+                        >
+                            <Box>
 
-                            <VStack 
-                                align = 'stretch'
-                                spacing = {5}
-                                divider = {<StackDivider borderColor='gray.200' />}
-                               
-                            >
-                                <Box>
+                                <FormControl isInvalid = {invalid.error}>
+
                                     <FormLabel>Email Address</FormLabel>
-                                    <Input type = 'email' onChange = {(event) => setEmail(event.target.value)} />
-                                    <FormHelperText>We'll never share your email</FormHelperText>
-                                </Box>
 
-                                <Box>
-                                    <FormLabel>Password</FormLabel>
-                                    <HStack>
-                                    <PinInput type = 'alphanumeric'>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 0, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 1, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 2, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 3, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 4, event.target.value, event.target.keyCode)}/>
-                                            <PinInputField 
-                                                onChange = {(event) => handlePassword
-                                                (0, 5, event.target.value, event.target.keyCode)}/>
-                                        </PinInput>
-                                    </HStack>
-                                </Box>
+                                    <Input 
+                                        type = 'email' name = 'email' 
+                                        onChange = {handleForm}
+                                    />
+
+                                    {invalid.error ? (
+                                        <FormErrorMessage>
+                                            {invalid.message}
+                                        </FormErrorMessage>
+                                        
+                                    ) : (
+                                        <FormHelperText>
+                                            We'll never share your email
+                                        </FormHelperText>
+                                    )}
+
+                                </FormControl>
+
                                 
-                                <Button colorScheme = 'purple' varient = 'solid'
-                                 isLoading = {loginInLoading} onClick = {handleLogIn}
-                                >
-                                Log In</Button>
-                            </VStack>
 
-                        </FormControl>
+                            </Box>
 
+                            <Box>
+                                <FormControl isInvalid = {invalid.error}>
+
+                                    <FormLabel>Password</FormLabel>
+
+                                    <Input 
+                                        type = 'password' name = 'password'  
+                                        onChange = {handleForm}
+                                    />
+
+                                    {invalid.error ? (
+                                        <FormErrorMessage>
+                                            {invalid.message}
+                                        </FormErrorMessage>
+                                            
+                                    ) : (
+                                        <FormHelperText>
+                                            Never share your password
+                                        </FormHelperText>
+                                    )}
+
+                                </FormControl>                                        
+                            </Box>
+                            
+                            <Button colorScheme = 'purple' varient = 'solid'
+                                isLoading = {loading} loadingText = 'Loggin in...'
+                                onClick = {handleLogIn}
+                            >
+                                Log In
+                            </Button>
+                        </VStack>
                     </ModalBody>
-
                 </ModalContent>
             </Modal>
         </>
