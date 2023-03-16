@@ -68,26 +68,24 @@ const LogIn = () => {
     
     //------------------------------------------------------------------
 
-    const handleForm = (e) => {
-        setForm(prev => ({...prev, [e.target.name]: e.target.value})); 
-
-        if (e.target.value === '') {
-            setInvalid(prev => ({...prev, 
-                [e.target.name]: {error: true, message: 'Required Field'}
-            }));
-        } 
-
-        setInvalid(prev => ({...prev, 
-            [e.target.name]: {error: false, message: ''}
-        }));
-    }
-
     const handleInvalid = (field, error, message) => {
 
         setInvalid(prev => ({...prev, 
             [field]: {error: error, message: message}
         }));
     }
+
+    const handleForm = (e) => {
+        setForm(prev => ({...prev, [e.target.name]: e.target.value})); 
+
+        if (e.target.value === '') {
+            handleInvalid(e.target.name, true, 'Required Field');
+        } 
+
+        handleInvalid(e.target.name, false, '');
+    }
+
+    
 
 
     //------------------------------------------------------------------
@@ -96,15 +94,24 @@ const LogIn = () => {
 
         //Static error check: ----------------------------------
 
-        if (form.email === '') {
-            handleInvalid('email', true, 'Required Field');
-            return;
-        }
+        const finalCheck = () => {
 
-        if (form.password === '') {
-            handleInvalid('password', true, 'Required Field');
-            return;
+            let trigger;
+
+            if (form.email === '') {
+                handleInvalid('email', true, 'Required Field');
+                trigger = true; 
+            }
+
+            if (form.password === '') {
+                handleInvalid('password', true, 'Required Field');
+                trigger = true; 
+            }
+
+            return trigger; 
         }
+        
+        if (finalCheck()) return; 
 
         //Limit queries ----------------------------------------
 
