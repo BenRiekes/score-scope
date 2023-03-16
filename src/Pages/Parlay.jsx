@@ -31,7 +31,7 @@ myReq.onload = function() {
 myReq.onerror = function(err) {
     console.log('ERROR!', err)
 }
-myReq.open('get', 'https://www.balldontlie.io/api/v1/teams', true )
+myReq.open('get', 'https://www.balldontlie.io/api/v1/players', true )
 myReq.setRequestHeader('Accept', ' application/json');
 myReq.send();
   
