@@ -47,8 +47,7 @@ const CreateAccount = () => {
         age: {error: false, message: ''},
         gender: {error: false, message: ''},
     });
-
-   
+    
     //------------------------------------------------------------------
 
     const handleClose = () => { //Close form and reset all objects back to original state
@@ -84,7 +83,7 @@ const CreateAccount = () => {
 
             case 'gender' : 
                 let result = checkGenderBox(genderBox, e.target.value);
-                
+
                 setGenderBox(result.genderBox); 
                 setForm(prev => ({...prev, [e.target.name]: result.selectedGender})); 
                 setInvalid(prev => ({...prev,[e.target.name]: result.invalid})); 
@@ -92,6 +91,7 @@ const CreateAccount = () => {
                break;  
             case 'setPassword' :
                 setForm(prev => ({...prev, [e.target.name]: e.target.value}));
+
                 setInvalid(prev => ({...prev, [e.target.name]: 
                     checkSetPassword(e.target.value, form.password)
                 }));
@@ -113,10 +113,10 @@ const CreateAccount = () => {
 
     const createUser = async () => {
 
-        let finalCheck = checkAllErrors(form); 
+        let finalCheck = await checkAllErrors(form); 
 
-        if (finalCheck.passedCheck === false) {
-            setInvalid(finalCheck.invalid)
+        if (!(finalCheck.passedCheck)){
+            setInvalid(finalCheck.invalid);
             return; 
         }
 

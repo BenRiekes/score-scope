@@ -25,6 +25,6 @@ export const storage = getFunctions(app);
 
 //Initialize Emulators:
 connectAuthEmulator(auth, "http://127.0.0.1:9099"); 
-connectFirestoreEmulator(db, "localhost", 8082);
+connectFirestoreEmulator(db, "localhost", 9090);
 connectFunctionsEmulator(functions, "localhost", 5001);
 connectStorageEmulator(storage, 'localhost', 9199);   

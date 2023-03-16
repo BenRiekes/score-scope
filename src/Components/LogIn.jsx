@@ -147,8 +147,6 @@ const LogIn = () => {
 
                                 </FormControl>
 
-                                
-
                             </Box>
 
                             <Box>

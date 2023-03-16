@@ -5,110 +5,87 @@ import {query, where, getDocs, collection, getFirestore } from "firebase/firesto
 
 //Fetch calls: --------------------------------------------------------------
 
-export const usernameExist = async(username) => {
+export const valueExist = async(field, val) => {
 
     const db = getFirestore();
-    const q = query(collection(db, 'users'), where('username', '==', username)); 
+    const q = query(collection(db, 'users'), where(field, '==', val)); 
     const querySnapshot = await getDocs(q);
 
-    if (querySnapshot.docs) return true; 
+    if (querySnapshot.docs.length > 0) {
+        return ({error: true, message: `${field} already in use`});
+    } 
 
-    return false; 
+    return ({error: false, message: ''});
 }
 
-export const emailExist = async(email) => {
-
-    const db = getFirestore();
-    const q = query(collection(db, 'users'), where('username', '==', email)); 
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.docs) return true; 
-
-    return false; 
-}
        
+//If validation: -----------------------------------------------
 
-//Switch case validation: -----------------------------------------------
+export const checkEmail = (email) => {
 
-export const checkEmail = (email) => { 
- 
-    switch (true) {
-        case email === '' :
-            return ({error: true, message: 'Required field'}); 
+    if (email === '') {
+        return ({error: true, message: 'Required field'}); 
+    } 
 
-        case emailExist(email) :
-            return ({error: true, message: 'Email already in use'}); 
-        
-        default:
-            return ({error: false, message: ''});   
-    }  
+    return ({error: false, message: ''});   
 }
 
 // --------------------------------------------------------------
 
 export const checkUsername = (username) => {
-
     const regex = /^[a-zA-Z0-9._]+$/;
-    
-    switch (true) {
-        case username === '' :
-            return ({error: true, message: 'Required Field'}); 
-            
-        case username.length < 3 :
-            return ({error: true, message: 'Usernames must be > 3 characters'});
 
-        case regex.test(username) === false :
-            return ({error: true, message: 'Usernames must consist of only letters, numbers, periods, and underscores'}); 
+    if (username === '') {
+        return ({error: true, message: 'Required Field'});
+    }    
 
-        case usernameExist(username) :
-            return ({error: true, message: 'Username already exist'}); 
-
-        default: 
-            return ({error: false, message: ''}); 
-
+    if (username.length < 3) {
+        return ({error: true, message: 'Usernames must be greater than 3 characters'});
     }
+
+    if (!(regex.test(username))) {
+        return ({error: true, message: 'Usernames must consist of only letters, numbers, periods, and underscores'});
+    }
+
+    return ({error: false, message: ''}); 
 }
 
 // --------------------------------------------------------------
 
 export const checkPassword = (password) => {
-
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!^&#])[a-zA-Z0-9!^&#]*$/;
 
-    switch (true) {
+    if (password === '') {
+        return ({error: true, message: 'Required Field'})
+    }    
 
-        case password === '' :
-            return ({error: true, message: 'Required Field'})
-
-        case password.length < 7 :
-            return ({error: true, message: 'Password must be at least 7 characters long'});
-
-        case regex.test(password) === false :
-            return ({
-                error: true, 
-                message: 'Must consist of numbers, one uppercase, one lowercase, and one special character (^ & # !)'
-            }); 
-
-        default : 
-            return ({error: false, message: ''}); 
+    if (password.length < 7) {
+        return ({error: true, message: 'Password must be at least 7 characters long'});
     }
+
+    if (!(regex.test(password))) {
+        return ({
+            error: true, 
+            message: 'Must consist of numbers, one uppercase, one lowercase, and one special character (^ & # !)'
+        }); 
+    } 
+
+    return ({error: false, message: ''}); 
 }
 
 //--------------------------------------------------------------
 
 export const checkSetPassword = (setPassword, password) => {
 
-    switch (true) {
-
-        case setPassword === '' :
-            return ({error: true, message: 'Required field'}); 
-
-        case setPassword !== password :
-            return ({error: true, message: 'passwords do not match'});
-        
-        default :
-            return ({error: false, message: ''}); 
+    if (setPassword === '') {
+        return ({error: true, message: 'Required field'}); 
     }
+
+    if (setPassword !== password) {
+        return ({error: true, message: 'passwords do not match'});
+    } 
+        
+    return ({error: false, message: ''}); 
 }
 
 //--------------------------------------------------------------
@@ -118,20 +95,19 @@ export const checkAge = (age) => {
     const regexAge = /^(1[8-9]|[2-9]\d|100)$/;
     const regexInput = /^\d+$/;
 
-    switch (true) {
+    if (age === undefined) {
+        return ({error: true, message: 'Required field'})   
+    }; 
 
-        case age === undefined :
-            return ({error: true, message: 'Required field'}); 
+    if (!(regexInput.test(age))) {
+        return ({error: true, message: 'Numbers only'});
+    } 
 
-        case regexInput.test(age) === false :
-            return ({error: true, message: 'Numbers only'});
+    if (!regexAge.test(age)) {
+        return ({error: true, message: 'Must be between 18 and 100 to create an account'});
+    } 
 
-        case regexAge.test(age) === false :
-            return ({error: true, message: 'Must be between 18 and 100 to create an account'});
-
-        default :
-            return ({error: false, message: ''}); 
-    }
+    return ({error: false, message: ''}); 
 }
 
 //--------------------------------------------------------------
@@ -139,30 +115,26 @@ export const checkAge = (age) => {
 export const checkGender = (gender) => {
 
     const genderIsValid = () => {
-
         const validGenders = ['Male', 'Female', 'Other']; 
 
         for (let i = 0; i < validGenders.length; i++) {
-
             if (validGenders[i] === gender && gender != '') {
                 return true; 
             }  
         }
+
         return false; 
     }
 
-    switch (true) {
+    if (gender === '') {
+        return ({error: true, message: 'Required Field'});
+    } 
 
-        case gender === '' :
-            return ({error: true, message: 'Required Field'});
-            
-        case genderIsValid() === false :
-            return ({error: true, message: 'Invalid gender selection'}); 
+    if (!(genderIsValid())) {
+        return ({error: true, message: 'Invalid gender selection'})
+    } 
 
-        default :
-            return ({error: false, message: ''}); 
-  
-    }
+    return ({error: false, message: ''});
 }
 
 //--------------------------------------------------------------
@@ -188,49 +160,67 @@ export const checkGenderBox = (genderBox, val) => {
     }
 
     const trueKeys = getTrueKeys();
+    const prevKey= trueKeys[0]; 
 
-    switch (true) {
+    if (!trueKeys) {  //All boxes unchecked
+        newBox[val] = true; 
+        selectedGender = val;
+    }
 
-        case !trueKeys :  //All boxes unchecked
-            newBox[val] = true; 
-            selectedGender = val;  
+    if (trueKeys && prevKey !== val) { //All boxes unchecked
+        newBox[val] = true;
+        newBox[prevKey] = false; 
+        selectedGender = val; 
+    }
 
-            break; 
-        case trueKeys && trueKeys[0] !== val : //One box to another
-            newBox[val] = true;
-            newBox[trueKeys[0]] = false; 
-            selectedGender = val; 
-            
-            break; 
-        case trueKeys && trueKeys[0] === val : //Uncheck Box
-            newBox[val] = false; 
-            selectedGender = ''; 
-
-        default :
-            break; 
+    if (trueKeys && prevKey === val) { //Uncheck Box
+        newBox[val] = false; 
+        selectedGender = ''; 
     }
  
     return {
         genderBox: newBox,
         selectedGender: selectedGender,
-        invalid: checkGender(val), 
+        invalid: checkGender(selectedGender), 
     }
 }
 
 //--------------------------------------------------------------
 
-export const checkAllErrors = (formObject) => {
+export const checkAllErrors = async (formObject) => {
+
+    /*
+        Condition to limit writes to firebase query: 
+
+        If the email and username fields do not have
+        any errors occur, check if their values are taken.
+
+        This effectively limit firebase queries becuase they 
+        only get called when the create user button is clicked 
+    */
+
+    let emailObj = checkEmail(formObject.email); 
+    let usernameObj = checkUsername(formObject.username);
+
+    if (!(emailObj.error)) {
+        emailObj = await valueExist('email', formObject.email); 
+    }
+
+    if (!(usernameObj.error)) {
+        usernameObj = await valueExist('username', formObject.username); 
+    }
+
+    //-----------------------------------------------------
 
     let errorObject = ({
-        email: checkEmail(formObject.email),
-        username: checkUsername(formObject.username),
+        email: emailObj,
+        username: usernameObj,
         password: checkPassword(formObject.password),
-        setPassword: checkSetPassword(formObject.setPassword), 
+        setPassword: checkSetPassword(formObject.setPassword, formObject.password), 
         age: checkAge(formObject.age),
         gender: checkGender(formObject.gender)
     })
 
-    
     for (let key in errorObject) {
 
         if (errorObject[key].error == true) {
@@ -253,8 +243,6 @@ export const checkSpecific = (field, val) => {
             return checkUsername(val); 
         case 'password' :
             return checkPassword(val); 
-        case 'setPassword' :
-            return checkSetPassword(val); 
         case 'age' :
             return checkAge(val);
         case'gender' :
