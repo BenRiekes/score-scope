@@ -8,20 +8,17 @@ import { auth, db } from "../firebase-config";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { httpsCallable, getFunctions } from "firebase/functions";
 
-
 //Functions:
 import { 
-    checkAll, checkEmail, checkUsername, checkPassword,
-    checkSetPassword, checkAge, checkGender, checkSpecific, valueExist
+    checkAllErrors, setAllErrors, checkSpecific, 
+    checkSetPassword, checkAge, checkGender,  valueExist, checkGenderBox
 } from "../Functions/CreateValidation";
 
 //Styles:
 import { 
-    Modal, ModalHeader, ModalBody, ModalContent,  
-    ModalOverlay, ModalCloseButton, FormControl, 
-    FormLabel, FormErrorMessage, FormHelperText, PinInputField, 
-    Checkbox, StackDivider,  VStack, HStack, Input, Button, Box, useDisclosure, NumberInput, NumberInputField,
-         
+    Modal, ModalHeader, ModalBody, ModalContent, ModalOverlay, 
+    ModalCloseButton, FormControl, FormLabel, FormErrorMessage, Checkbox, 
+    StackDivider,  VStack, HStack, Input, Button, Box, useDisclosure
 } from "@chakra-ui/react";
 
 
@@ -30,15 +27,18 @@ const CreateAccount = () => {
     const { isOpen, onOpen, onClose } = useDisclosure(); 
     const [submitting, setSumbitting] = useState(false);
     
+    //Object of all form fields
     const [form, setForm] = useState({
         email: '', username: '', password: '', 
         setPassword: '', age: 0, gender: ''
     });
 
+    //Object to conditionally display checkboxes
     const [genderBox, setGenderBox] = useState({
         'Male': false, 'Female': false, 'Other': false
     }); 
     
+    //Object to conditionally display errors
     const [invalid, setInvalid] = useState({
         email: {error: false, message: ''},
         username: {error: false, message: ''},
@@ -48,11 +48,10 @@ const CreateAccount = () => {
         gender: {error: false, message: ''},
     });
 
-    
    
     //------------------------------------------------------------------
 
-    const handleClose = () => {
+    const handleClose = () => { //Close form and reset all objects back to original state
         onClose();
 
         setForm({
@@ -78,65 +77,35 @@ const CreateAccount = () => {
 
     //------------------------------------------------------------------
 
-    const handleForm = (e) => {
-        e.preventDefault();
-        setForm(prev => ({...prev, [e.target.name]: e.target.value}));
-
-        if (e.target.name == 'setPassword') {
-            setInvalid(prev => ({...prev, [e.target.name]: checkSetPassword(e.target.value, form.password)}));
-        } else {
-            setInvalid(prev => ({...prev, [e.target.name]: checkSpecific(e.target.name, e.target.value)}));
-        }
-    }
-
-    //------------------------------------------------------------------
-
-    const handleCheckbox = (e) => {
+    const handleForm = (e) => { //Take the name of the field id for the key and set its value
         e.preventDefault();
 
-        const getTrueKeys = () => {
-            let trueKeys = []; 
-            const keys = ['Male', 'Female', 'Other']; 
-            
-            for (let i = 0; i < keys.length; i++) {
-                if (genderBox[keys[i]] === true) {
-                    trueKeys.push(keys[i]); 
-                }
-            }
-            return trueKeys; 
-        }
+        switch (e.target.name) {
 
-        const trueKeys = getTrueKeys();
-
-        switch (true) {
-            case !trueKeys: // All boxes empty
-                setGenderBox(prev => ({ ...prev, [e.target.value]: true }));
-                setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-                break;
-          
-            case trueKeys[0] != e.target.value: // One box to another
-                setGenderBox(prev => ({...prev, [trueKeys[0]]: false, [e.target.value]: true}));
-                setForm(prev => ({...prev, [e.target.name]: e.target.value}));
-
-                setInvalid(prev => ({   //Being weird in create validation
-                    ...prev, 
-                    gender: ({error: false, message: 'false'})
-                })); 
-                break;
-            case trueKeys[0] === e.target.value: // Uncheck box
-                setGenderBox(prev => ({...prev, [e.target.value]: false}));
-                setForm(prev => ({...prev, [e.target.name]: ''}));  
+            case 'gender' : 
+                let result = checkGenderBox(genderBox, e.target.value);
                 
-                setInvalid(prev => ({   //Being weird in create validation
-                    ...prev, 
-                    gender: ({error: true, message: 'Gender selection required'})
-                })); 
-              break;
+                setGenderBox(result.genderBox); 
+                setForm(prev => ({...prev, [e.target.name]: result.selectedGender})); 
+                setInvalid(prev => ({...prev,[e.target.name]: result.invalid})); 
+               
+               break;  
+            case 'setPassword' :
+                setForm(prev => ({...prev, [e.target.name]: e.target.value}));
+                setInvalid(prev => ({...prev, [e.target.name]: 
+                    checkSetPassword(e.target.value, form.password)
+                }));
 
-            default:
-              break;
-        }
+                break; 
+            default : 
+                setForm(prev => ({...prev, [e.target.name]: e.target.value}));
+                setInvalid(prev => ({
+                    ...prev, [e.target.name]: 
+                    checkSpecific(e.target.name, e.target.value)
+                }));
 
+                break;
+        } 
 
     }
 
@@ -144,66 +113,55 @@ const CreateAccount = () => {
 
     const createUser = async () => {
 
-        if (checkAll(form) === true) return; 
+        let finalCheck = checkAllErrors(form); 
+
+        if (finalCheck.passedCheck === false) {
+            setInvalid(finalCheck.invalid)
+            return; 
+        }
+
         setSumbitting(true);
         
         setTimeout(async () => {
 
-            //Firebase auth createion and handeling: 
-            const userCredential =  await createUserWithEmailAndPassword(auth, form.email, form.password).catch (error => {
+            //Firebase auth creation and handeling: 
+            const userCredential =  await createUserWithEmailAndPassword (
+                auth, form.email, form.password
 
-                let errorCode = error.message; 
-
-                switch (errorCode) {
-        
-                    case errorCode === 'auth/weak-password' : 
-                        alert("weak password")
-                        break; 
-                    case errorCode === 'auth/email-already-in-use' :
-                        alert ("account already exist"); 
-                        break; 
-                    case errorCode == 'auth/invalid-email' :
-                        alert ("invalid email"); 
-                    default:
-                        alert (error.message); 
-                        break; 
-                }
+            ).catch (error => {
+                
+                setSumbitting(false);
+                alert(error.message);
+                return;  
             })
 
             //-----------------------------------------------------
 
-            if (!userCredential) {
-                setSumbitting(false);
+            if (!userCredential) { setSumbitting(false); return;} 
+
+            //Firebase function to call after create user isntance has been successfull
+            const firebaseCreateAccount = httpsCallable(getFunctions(), "createUser");
+            
+            const response = await firebaseCreateAccount ({
+                uid: userCredential.user.uid,
+                username: form.username,  
+                gender: form.gender,
+                email: form.email,
+                age: form.age
+            })
+            
+            if (response.data.isValid === false) {
+                alert("An error occured while creating your account");
+                setSumbitting(false); 
                 return; 
 
-            }  else {
-
-                //Firebase function to call after create user isntance has been successfull
-                const firebaseCreateAccount = httpsCallable(getFunctions(), "createUser");
-                
-                const response = await firebaseCreateAccount ({
-
-                    uid: userCredential.user.uid,
-                    username: form.username,  
-                    gender: form.gender,
-                    email: form.email,
-                    age: form.age
-
-                })
-                
-                if (response.data.isValid === false) {
-                    alert("An error occured while creating your account");
-                    setSumbitting(false); 
-                    return; 
-
-                } else {
-                    onClose();
-                    alert("Account successfully created"); 
-                    window.location.reload();
-                    return; 
-                }   
-            }
-
+            } else {
+                onClose();
+                alert("Account successfully created"); 
+                //window.location.reload();
+                return; 
+            }   
+        
         }, 1000); 
     }    
    
@@ -347,21 +305,21 @@ const CreateAccount = () => {
                                             colorScheme = 'purple' isChecked = {genderBox['Male']}
                                             name = 'gender' value = 'Male'
 
-                                            onChange = {(e) => handleCheckbox(e)}
+                                            onChange = {handleForm}
                                         >Male</Checkbox>
                                         
                                         <Checkbox
                                             size = 'md' colorScheme = 'purple' isChecked = {genderBox['Female']}
                                             name = 'gender' value = 'Female'
 
-                                            onChange = {handleCheckbox}
+                                            onChange = {handleForm}
                                         >Female</Checkbox>
 
                                         <Checkbox
                                             size = 'md' colorScheme = 'purple' isChecked = {genderBox['Other']}
                                             name = 'gender' value = 'Other'
 
-                                            onChange = {(e) => handleCheckbox(e)}
+                                            onChange = {handleForm}
                                         >Other</Checkbox>
                                     </HStack>
 
@@ -374,11 +332,8 @@ const CreateAccount = () => {
                                     )}
                                 </FormControl>
                                 
-
-                                
                             </Box>
-                                
-                            
+                                  
                             <Button 
                                 colorScheme = 'purple' varient = 'solid'
                                 isLoading = {submitting} loadingText = 'Creating...'
@@ -388,7 +343,6 @@ const CreateAccount = () => {
                             </Button>
                         </VStack>                           
                         
-
                     </ModalBody>
                 </ModalContent>
             </Modal>
