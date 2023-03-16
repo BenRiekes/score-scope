@@ -82,6 +82,13 @@ const LogIn = () => {
         }));
     }
 
+    const handleInvalid = (field, error, message) => {
+
+        setInvalid(prev => ({...prev, 
+            [field]: {error: error, message: message}
+        }));
+    }
+
 
     //------------------------------------------------------------------
 
@@ -90,18 +97,12 @@ const LogIn = () => {
         //Static error check: ----------------------------------
 
         if (form.email === '') {
-            setInvalid(prev => ({...prev, 
-                ['email']: {error: true, message: 'Required Field'}
-            }));
-
+            handleInvalid('email', true, 'Required Field');
             return;
         }
 
         if (form.password === '') {
-            setInvalid(prev => ({...prev, 
-                ['password']: {error: true, message: 'Required Field'}
-            }));
-
+            handleInvalid('password', true, 'Required Field');
             return;
         }
 
@@ -110,10 +111,7 @@ const LogIn = () => {
         const queryCheck = await valueExist('email', form.email); 
 
         if (!(queryCheck.error)) {
-            setInvalid(prev => ({...prev, 
-                ['email']: {error: true, message: `${form.email} does not exist`}
-            }));
-
+            handleInvalid('email', true, `${form.email} does not exist`);
             return; 
         }
 
@@ -128,10 +126,9 @@ const LogIn = () => {
                 if (!userCredential) {
                     setLoading(false); 
 
-                    setInvalid(({ 
-                        ['email']: {error: true, message: 'Incorrect username or password'},
-                        ['password']: {error: true, message: 'Incorrect username or password'}
-                    }));
+                    handleInvalid('email', true, 'Incorrect username or password');
+                    handleInvalid('password', true, 'Incorrect username or password');
+
                     return; 
                 } 
 
@@ -139,10 +136,9 @@ const LogIn = () => {
                 
             }).catch(error => {
 
-                setInvalid(({ 
-                    ['email']: {error: true, message: 'Incorrect username or password'},
-                    ['password']: {error: true, message: 'Incorrect username or password'}
-                })); 
+                handleInvalid('email', true, 'Incorrect username or password');
+                handleInvalid('password', true, 'Incorrect username or password');
+
                 setLoading(false); 
                 return; 
             })

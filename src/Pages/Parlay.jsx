@@ -1,6 +1,7 @@
 //React Imports:
 import React from "react";
 import { useState, useRef, useEffect } from "react";
+import axios from 'axios'
 
 //Styling:
 import Icon from '@mdi/react';
@@ -22,7 +23,7 @@ import {
 } from '@mdi/js';
 
 
-// const myReq = new XMLHttpRequest();
+const myReq = new XMLHttpRequest();
 
 // myReq.onload = function() {
 //     const data= JSON.parse(this.responseText);
