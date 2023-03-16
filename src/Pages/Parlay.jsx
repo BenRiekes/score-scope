@@ -1,6 +1,7 @@
 //React Imports:
 import React from "react";
 import { useState, useRef, useEffect } from "react";
+import axios from 'axios'
 
 //Styling:
 import Icon from '@mdi/react';
@@ -22,18 +23,16 @@ import {
 } from '@mdi/js';
 
 
-const myReq = new XMLHttpRequest();
 
-myReq.onload = function() {
-    const data= JSON.parse(this.responseText);
-    console.log(data);
-};
-myReq.onerror = function(err) {
-    console.log('ERROR!', err)
-}
-myReq.open('get', 'https://www.balldontlie.io/api/v1/players', true )
-myReq.setRequestHeader('Accept', ' application/json');
-myReq.send();
+axios.get('https://www.balldontlie.io/api/v1/players')
+  .then(response => {
+    // handle success
+    console.log(response.data);
+  })
+  .catch(error => {
+    // handle error
+    console.log(error);
+  });
   
 
 
