@@ -17,6 +17,8 @@ import {
     AccordionPanel, AccordionIcon, Spacer, Divider
 } from '@chakra-ui/react'
 
+import { useToast } from '@chakra-ui/react'
+
 import { 
     mdiBasketball, mdiFootball, mdiHockeyPuck, 
     mdiSoccer, mdiBaseball, mdiMixedMartialArts 
@@ -40,6 +42,7 @@ const myReq = new XMLHttpRequest();
 
 
 const Parlay = () => {
+    const toast = useToast()
 
     const leagues = {
         NBA: true, NFL: false, NHL: false,
@@ -56,13 +59,7 @@ const Parlay = () => {
     ]; 
 
 
-    const handleLeague = (e) => {
-
-        if (leagues[e.target.name] != true) {
-            alert ("Coming Soon!")
-        }
-    }
-
+    
 
     return (
 
@@ -83,7 +80,20 @@ const Parlay = () => {
                                 key = {button.name}
                                 colorScheme = {button.colorScheme}
                                 rightIcon = {<Icon path = {button.icon} size = {1} />}
-                                name = {button.name} onClick = {handleLeague}
+                                name = {button.name} onClick = {() => {
+
+                                    if (!(leagues[button.name])) {
+
+                                        toast({
+                                            position: 'top',
+                                            title: 'Coming Soon!',
+                                            description: `${button.name} is coming to Score Scope soon!`,
+                                            status: 'success',
+                                            duration: 1000,
+                                            isClosable: true,
+                                        })
+                                    }
+                                }}
                             >
                                 {button.name}
                             </Button>

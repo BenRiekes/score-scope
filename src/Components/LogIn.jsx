@@ -95,7 +95,6 @@ const LogIn = () => {
         //Static error check: ----------------------------------
 
         const finalCheck = () => {
-
             let trigger;
 
             if (form.email === '') {
