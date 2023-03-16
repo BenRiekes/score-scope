@@ -5,6 +5,8 @@
   "dependencies": {
     "@alch/alchemy-web3": "^1.4.7",
     "@chakra-ui/react": "^2.5.1",
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
     "@ethersproject/providers": "^5.7.2",
     "@mdi/js": "^7.1.96",
     "@mdi/react": "^1.6.1",
@@ -16,6 +18,7 @@
     "ethereumjs-wallet": "^1.0.2",
     "ethers": "^6.1.0",
     "firebase": "^9.17.2",
+    "framer-motion": "^10.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dotenv": "^0.1.3",
