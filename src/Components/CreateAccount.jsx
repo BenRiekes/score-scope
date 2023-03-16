@@ -9,6 +9,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { httpsCallable, getFunctions } from "firebase/functions";
 
 //Functions:
+
 import { 
     checkAllErrors, setAllErrors, checkSpecific, 
     checkSetPassword, checkAge, checkGender,  valueExist, checkGenderBox
@@ -23,6 +24,7 @@ import {
 
 
 const CreateAccount = () => {
+    //Style State:
 
     const { isOpen, onOpen, onClose } = useDisclosure(); 
     const [submitting, setSumbitting] = useState(false);
@@ -47,6 +49,8 @@ const CreateAccount = () => {
         age: {error: false, message: ''},
         gender: {error: false, message: ''},
     });
+
+    
     
     //------------------------------------------------------------------
 
@@ -157,12 +161,11 @@ const CreateAccount = () => {
 
             } else {
                 onClose();
-                alert("Account successfully created"); 
-                //window.location.reload();
                 return; 
             }   
         
-        }, 1000); 
+        }, 1000);
+          
     }    
    
 

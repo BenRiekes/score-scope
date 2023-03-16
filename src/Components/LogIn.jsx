@@ -2,7 +2,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom"; 
 import { useState, useRef, useEffect } from "react";
-import CreateAccount from "./CreateAccount";
+
+import { checkEmail, valueExist } from "../Functions/CreateValidation";
 
 //Firebase:
 import { 
@@ -36,11 +37,15 @@ const LogIn = () => {
     });
 
     const [invalid, setInvalid] = useState({
-        error: false,
-        message: ''
+       email: {error: false, message: ''},
+       password: {error: false, message: ''}
     })
     
     const [loading, setLoading] = useState(false); 
+
+    useState(() => {
+        console.log(invalid)
+    }, [invalid]);
 
     //------------------------------------------------------------------
 
@@ -53,8 +58,8 @@ const LogIn = () => {
         })
 
         setInvalid({
-            error: false,
-            message: ''
+            email: {error: false, message: ''},
+            password: {error: false, message: ''}
         }); 
 
         setLoading(false);
@@ -65,11 +70,54 @@ const LogIn = () => {
 
     const handleForm = (e) => {
         setForm(prev => ({...prev, [e.target.name]: e.target.value})); 
+
+        if (e.target.value === '') {
+            setInvalid(prev => ({...prev, 
+                [e.target.name]: {error: true, message: 'Required Field'}
+            }));
+        } 
+
+        setInvalid(prev => ({...prev, 
+            [e.target.name]: {error: false, message: ''}
+        }));
     }
+
 
     //------------------------------------------------------------------
 
-    const handleLogIn = () => {
+    const handleLogIn = async () => {
+
+        //Static error check: ----------------------------------
+
+        if (form.email === '') {
+            setInvalid(prev => ({...prev, 
+                ['email']: {error: true, message: 'Required Field'}
+            }));
+
+            return;
+        }
+
+        if (form.password === '') {
+            setInvalid(prev => ({...prev, 
+                ['password']: {error: true, message: 'Required Field'}
+            }));
+
+            return;
+        }
+
+        //Limit queries ----------------------------------------
+
+        const queryCheck = await valueExist('email', form.email); 
+
+        if (!(queryCheck.error)) {
+            setInvalid(prev => ({...prev, 
+                ['email']: {error: true, message: `${form.email} does not exist`}
+            }));
+
+            return; 
+        }
+
+        //Limit queries ----------------------------------------
 
         setLoading(true); 
 
@@ -79,16 +127,23 @@ const LogIn = () => {
 
                 if (!userCredential) {
                     setLoading(false); 
-                    setInvalid({error: true, message: 'Incorrect username or password'});
+
+                    setInvalid(({ 
+                        ['email']: {error: true, message: 'Incorrect username or password'},
+                        ['password']: {error: true, message: 'Incorrect username or password'}
+                    }));
                     return; 
                 } 
 
                 onClose(); 
-                window.location.reload();
-    
+                
             }).catch(error => {
-                setLoading(false);
-                setInvalid({error: true, message: 'Incorrect username or password'}); 
+
+                setInvalid(({ 
+                    ['email']: {error: true, message: 'Incorrect username or password'},
+                    ['password']: {error: true, message: 'Incorrect username or password'}
+                })); 
+                setLoading(false); 
                 return; 
             })
 
@@ -125,7 +180,7 @@ const LogIn = () => {
                         >
                             <Box>
 
-                                <FormControl isInvalid = {invalid.error}>
+                                <FormControl isInvalid = {invalid.email.error}>
 
                                     <FormLabel>Email Address</FormLabel>
 
@@ -134,9 +189,9 @@ const LogIn = () => {
                                         onChange = {handleForm}
                                     />
 
-                                    {invalid.error ? (
+                                    {invalid.email.error ? (
                                         <FormErrorMessage>
-                                            {invalid.message}
+                                            {invalid.email.message}
                                         </FormErrorMessage>
                                         
                                     ) : (
@@ -150,7 +205,7 @@ const LogIn = () => {
                             </Box>
 
                             <Box>
-                                <FormControl isInvalid = {invalid.error}>
+                                <FormControl isInvalid = {invalid.password.error}>
 
                                     <FormLabel>Password</FormLabel>
 
@@ -159,9 +214,9 @@ const LogIn = () => {
                                         onChange = {handleForm}
                                     />
 
-                                    {invalid.error ? (
+                                    {invalid.password.error ? (
                                         <FormErrorMessage>
-                                            {invalid.message}
+                                            {invalid.password.message}
                                         </FormErrorMessage>
                                             
                                     ) : (

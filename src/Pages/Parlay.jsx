@@ -22,33 +22,42 @@ import {
 } from '@mdi/js';
 
 
-const myReq = new XMLHttpRequest();
+// const myReq = new XMLHttpRequest();
 
-myReq.onload = function() {
-    const data= JSON.parse(this.responseText);
-    console.log(data);
-};
-myReq.onerror = function(err) {
-    console.log('ERROR!', err)
-}
-myReq.open('get', 'https://www.balldontlie.io/api/v1/players', true )
-myReq.setRequestHeader('Accept', ' application/json');
-myReq.send();
+// myReq.onload = function() {
+//     const data= JSON.parse(this.responseText);
+//     console.log(data);
+// };
+// myReq.onerror = function(err) {
+//     console.log('ERROR!', err)
+// }
+// myReq.open('get', 'https://www.balldontlie.io/api/v1/players', true )
+// myReq.setRequestHeader('Accept', ' application/json');
+// myReq.send();
   
 
 
 
 const Parlay = () => {
 
-    
     const leagues = {
-        'NBA': true, 'NFL': false, 'NHL': false,
-        'MLB': false, 'MLS': false, 'MMA': false,    
+        NBA: true, NFL: false, NHL: false,
+        MLB: false, MLS: false, MMA: false,    
     }; 
 
-    const handleSelection = (leagueChoice) => {
+    const leagueButtons = [
+        { name: 'NBA', colorScheme: 'purple', icon: mdiBasketball },
+        { name: 'NFL', colorScheme: 'gray', icon: mdiFootball },
+        { name: 'NHL', colorScheme: 'gray', icon: mdiHockeyPuck },
+        { name: 'MLB', colorScheme: 'gray', icon: mdiBaseball },
+        { name: 'MLS', colorScheme: 'gray', icon: mdiSoccer },
+        { name: 'MMA', colorScheme: 'gray', icon: mdiMixedMartialArts },
+    ]; 
 
-        if (leagues[leagueChoice] != true) {
+
+    const handleLeague = (e) => {
+
+        if (leagues[e.target.name] != true) {
             alert ("Coming Soon!")
         }
     }
@@ -65,29 +74,20 @@ const Parlay = () => {
 
                     <Heading style = {{color: 'white'}}>Leagues:</Heading>
 
-                    <Button colorScheme = 'purple' rightIcon = {<Icon path = {mdiBasketball} size = {1}/>}
-                        id = 'NBA' onClick = {(e) => handleSelection(e.target.id)}>
-                    NBA</Button>
+                    {leagueButtons.map((button) => {
 
-                    <Button colorScheme = 'gray' rightIcon = {<Icon path = {mdiFootball} size = {1}/>}
-                        id = 'NFL' onClick = {(e) => handleSelection(e.target.id)}>
-                    NFL</Button>
+                        return (
 
-                    <Button colorScheme = 'gray' rightIcon = {<Icon path = {mdiHockeyPuck} size = {1}/>}
-                        id = 'NHL' onClick = {(e) => handleSelection(e.target.id)}>
-                    NHL</Button>
-
-                    <Button colorScheme = 'gray' rightIcon = {<Icon path = {mdiBaseball} size = {1}/>}
-                        id = 'MLB' onClick = {(e) => handleSelection(e.target.id)}>
-                    MLB</Button>
-
-                    <Button colorScheme = 'gray' rightIcon = {<Icon path = {mdiSoccer} size = {1}/>}
-                        id = 'MLS' onClick = {(e) => handleSelection(e.target.id)}>
-                    MLS</Button>
-
-                    <Button colorScheme = 'gray' rightIcon = {<Icon path = {mdiMixedMartialArts} size = {1}/>}
-                        id = 'MMA' onClick = {(e) => handleSelection(e.target.id)}>
-                    MMA</Button>
+                            <Button
+                                key = {button.name}
+                                colorScheme = {button.colorScheme}
+                                rightIcon = {<Icon path = {button.icon} size = {1} />}
+                                name = {button.name} onClick = {handleLeague}
+                            >
+                                {button.name}
+                            </Button>
+                        ) 
+                    })}
 
                 </ButtonGroup>
 
@@ -95,7 +95,6 @@ const Parlay = () => {
 
             <hr style = {{backgroundColor: "#2d2d2d"}}/>
 
-            
         </div>
     )
 }
