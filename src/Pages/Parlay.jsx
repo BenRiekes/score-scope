@@ -33,7 +33,7 @@ const Parlay = () => {
     const toast = useToast();
 
     //Functional State:
-    const [teamsPerSzn, setTeamsPerSzn] = useState([]);
+    const [teams, setTeams] = useState([]);
 
     const leagues = {
         NBA: true, NFL: false, NHL: false,
@@ -49,41 +49,54 @@ const Parlay = () => {
         { name: 'MMA', colorScheme: 'gray', icon: mdiMixedMartialArts },
     ]; 
 
+    useEffect(() => {
+        console.log(teams);
+        
+    }, [teams])
+
     //--------------------------------------------------------------------
 
-    const getTeamPlayers = async (teamsArr) => {
+    // Function to get the players of a given team and season
+    const getTeamPlayers = (team, season) => {
 
-        const requestPlayers = async (options) => {
+        return new Promise ((resolve, reject) => { 
 
-            axios.request(options).then(function (playerRes) {
-                console.log(playerRes.data.response);
-
-            }).catch(function (error) {
-                console.error(error);
-            });
-        } 
-
-        
-        for (let i = 0; i < teamsArr.length; i++) {
-
-            let options = {
+            const options = {
                 method: 'GET',
                 url: 'https://api-nba-v1.p.rapidapi.com/players',
     
-                params: {team: teamsArr[i].teamID, season: 2015},
+                params: {team: team, season: season},
                 headers: {
                   'X-RapidAPI-Key': '01487261e9mshca9214823c98e4fp1c5658jsn894b41e1d37d',
                   'X-RapidAPI-Host': 'api-nba-v1.p.rapidapi.com'
                 }
             };
 
-            // for (let j = 2015; j < 2023; j++) {
-            //     teamsArr[i].teamPlayers[2015] = await 
-            // }
+            axios.request(options).then(function (playerRes) {
 
-            
-        }
-       
+                let players = []; 
+                let playerData = playerRes.data.response;
+                
+                if (!(playerData)) {
+                    players.push(null);
+                    return resolve (players);  
+                }
+    
+                for (let i = 0; i < playerData.length; i++) {
+    
+                    players.push({
+                        playerID: playerData[i].id, 
+                        playerName: playerData[i].firstname + ' ' + playerData[i].lastname
+                    }); 
+                }
+    
+                return resolve(players);
+                
+            }).catch(function (error) {
+                return reject(error); 
+            });
+        })
+   
     }
 
     const getTeams = () => {
@@ -99,32 +112,49 @@ const Parlay = () => {
         }
 
         axios.request(options).then(function (teamRes) {
-            let teamsArr = [];
-            let teams = teamRes.data.response;
 
-            for (let i = 0; i < teams.length; i++) {
+            let teamsArr = teamRes.data.response;
+            let teamsFinal = []; 
+            let promises = [];
 
-                if(teams[i].nbaFranchise) {
+            for (let i = 0; i < teamsArr.length; i++) {
+
+                if (teamsArr[i].nbaFranchise) {
 
                     let teamObj = {
-                        teamID: teams[i].id, 
-                        teamName: teams[i].name,
 
-                        teamPlayers: {
-                            2015: [], 2016: [], 2017: [], 2018: [],
-                            2019: [], 2020: [], 2021: [], 2022: []
-                        }
+                        teamID: teamsArr[i].id,
+                        teamCode: teamsArr[i].code,
+                        teamName: teamsArr[i].name,
+                        teamNickname: teamsArr[i].nickname,
+                        teamCity: teamsArr[i].city,
+                        teamPlayers: {}
                     }
 
-                    teamsArr.push(teamObj); 
-                }
-            }
+                    //Loop through each season from 2015 to 2022
+                    for (let season = 2015; season <= 2022; season++) {
 
-            getTeamPlayers(teamObj);
+                        //Call getTeamPlayers, push the resulting Promise to the 'promises' array
+                        promises.push(
+                            getTeamPlayers(teamsArr[i].id, season).then((players) => {
+                                teamObj.teamPlayers[season] = players; 
+                            })
+                        )
+                    }
 
-        }).catch(function (error) {
+                    teamsFinal.push(teamObj); 
+                }  
+            };
+
+            //Wait for all promises to resolve then set state
+            Promise.all(promises).then(() => {
+                setTeams(teamsFinal);
+            });
+
+        }).catch (function (error) {
             console.error(error);
         });
+ 
     }
 
 
