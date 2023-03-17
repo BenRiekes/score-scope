@@ -1,0 +1,19 @@
+
+- Standings:
+
+    - Get all Standings from one {league} & {season}
+        get("https://api-nba-v1.p.rapidapi.com/standings?league=standard&season=2020");
+    -
+
+    - Get all Standings from one {team} & {season}
+        get("https://api-nba-v1.p.rapidapi.com/standings?team=1&season=2020&league=standard");
+    -
+
+    - Get all Standings from one {conference} & {season}
+        get("https://api-nba-v1.p.rapidapi.com/standings?league=standard&season=2019&conference=east");
+    -
+
+    - Get all Standings from one {division} & {season}
+        get("https://api-nba-v1.p.rapidapi.com/standings?league=standard&season=2019&division=southeast");
+    -
+-

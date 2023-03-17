@@ -94,6 +94,8 @@ const LogIn = () => {
 
         //Static error check: ----------------------------------
 
+        
+
         const finalCheck = () => {
             let trigger;
 
@@ -111,6 +113,7 @@ const LogIn = () => {
         }
         
         if (finalCheck()) return; 
+
 
         //Limit queries ----------------------------------------
 

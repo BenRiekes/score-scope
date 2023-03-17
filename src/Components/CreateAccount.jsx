@@ -16,6 +16,8 @@ import {
 } from "../Functions/CreateValidation";
 
 //Styles:
+import { useToast } from '@chakra-ui/react'
+
 import { 
     Modal, ModalHeader, ModalBody, ModalContent, ModalOverlay, 
     ModalCloseButton, FormControl, FormLabel, FormErrorMessage, Checkbox, 
@@ -25,7 +27,7 @@ import {
 
 const CreateAccount = () => {
     //Style State:
-
+    const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure(); 
     const [submitting, setSumbitting] = useState(false);
     
@@ -161,6 +163,14 @@ const CreateAccount = () => {
 
             } else {
                 onClose();
+                toast({
+                    position: 'top',
+                    title: 'Account successfully created!',
+                    description: 'Welcome to Score Scope',
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                })
                 return; 
             }   
         

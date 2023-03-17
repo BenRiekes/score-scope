@@ -1,0 +1,15 @@
+
+- Players:
+
+    - Get one player from one player {id}
+        get("https://api-nba-v1.p.rapidapi.com/players?id=1");
+    -
+
+    - Get one player from one player {name}
+        get("https://api-nba-v1.p.rapidapi.com/players?name=James");
+    -
+
+    - Get all players from a team {id} & {season}
+        get("https://api-nba-v1.p.rapidapi.com/players?team=1&season=2020");
+    -
+-
