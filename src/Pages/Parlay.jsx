@@ -23,6 +23,7 @@ import {
     mdiBasketball, mdiFootball, mdiHockeyPuck, 
     mdiSoccer, mdiBaseball, mdiMixedMartialArts 
 } from '@mdi/js';
+import { getMaticPrice } from "../Functions/GetBalance";
 
 
 
@@ -49,10 +50,6 @@ const Parlay = () => {
         { name: 'MMA', colorScheme: 'gray', icon: mdiMixedMartialArts },
     ]; 
 
-    useEffect(() => {
-        console.log(teams);
-        
-    }, [teams])
 
     //--------------------------------------------------------------------
 
@@ -72,7 +69,7 @@ const Parlay = () => {
                 }
             };
 
-            axios.request(options).then(function (playerRes) {
+            axios.request(options).then((playerRes) => {
 
                 let players = []; 
                 let playerData = playerRes.data.response;
@@ -92,7 +89,7 @@ const Parlay = () => {
     
                 return resolve(players);
                 
-            }).catch(function (error) {
+            }).catch((error) => {
                 return reject(error); 
             });
         })
@@ -111,7 +108,7 @@ const Parlay = () => {
             }
         }
 
-        axios.request(options).then(function (teamRes) {
+        axios.request(options).then((teamRes) => {
 
             let teamsArr = teamRes.data.response;
             let teamsFinal = []; 
@@ -128,6 +125,8 @@ const Parlay = () => {
                         teamName: teamsArr[i].name,
                         teamNickname: teamsArr[i].nickname,
                         teamCity: teamsArr[i].city,
+                        teamConference: teamsArr[i].leagues.standard.conference, //Test this
+                        teamDivision: teamsArr[i].leagues.standard.division,
                         teamPlayers: {}
                     }
 

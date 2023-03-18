@@ -71,19 +71,4 @@ exports.createUser = functions.https.onCall(async (data, context) => {
 
 //------------------------------------------------------
 
-exports.getNBAData = functions.https.onRequest(async (data, context) => {
 
-    const apiHost = 'api-nba-v1.p.rapidapi.com';
-    const apiKey = '01487261e9mshca9214823c98e4fp1c5658jsn894b41e1d37d';
-
-    const nbaTeams = [
-        'Atlanta Hawks', 'Boston Celtics', 'Brooklyn Nets', 'Charlotte Hornets', 
-        'Chicago Bulls','Cleveland Cavaliers', 'Dallas Mavericks','Denver Nuggets',
-        'Detroit Pistons', 'Golden State Warriors', 'Houston Rockets', 'Indiana Pacers',
-        'LA Clippers', 'Los Angeles Lakers', 'Memphis Grizzlies', 'Miami Heat', 'Milwaukee Bucks',
-        'Minnesota Timberwolves', 'New Orleans Pelicans', 'New York Knicks', 'Oklahoma City Thunder',
-        'Orlando Magic', 'Philadelphia 76ers', 'Phoenix Suns', 'Portland Trail Blazers','Sacramento Kings',
-        'San Antonio Spurs', 'Toronto Raptors', 'Utah Jazz','Washington Wizards'
-    ];
-
-})

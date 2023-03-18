@@ -1,3 +1,4 @@
+import axios from "axios";
 import { Network, Alchemy } from "alchemy-sdk"; 
 import {query, where, doc, getDoc, collection, getFirestore } from "firebase/firestore";
 
@@ -8,15 +9,14 @@ export const getUserAddress = async (uid) => {
     const userDoc = await getDoc(userRef); 
 
     if (userDoc.exists()) {
-        console.log(userDoc.data());
+        return userDoc.data().wallet.address;
     }
+
+    return null; 
 }
 
+
 export const getUserBalance = async (uid) => {
-
-    if (!uid) return; 
-
-    const address = getUserAddress(uid);
 
     const settings = {
         apiKey: "-j_EMb6mI2xbZMkcSOgXF-R34u_RpYv-",
@@ -24,16 +24,17 @@ export const getUserBalance = async (uid) => {
     }; 
 
     const alchemy = new Alchemy(settings); 
+    const address = await getUserAddress(uid);
+    
+    if (address !== null) {
+        const balanceRes = await alchemy.core.getBalance(address, 'latest')
 
-    let userBalance; 
+        let maticBalance = parseInt(balanceRes._hex, 16);
+        let userBalance = ({matic: maticBalance.toString(), usd: '?'}); 
+    
+        return userBalance;
+    } 
 
-    alchemy.core.getBalance(address, "latest").then (response => {
-
-        userBalance = parseInt(response._hex); 
-        return userBalance; 
-
-    }).catch (error => {
-        console.log("An error occured " + error); 
-    })
+    return ({matic: '?', usd: '?'}); 
 }
 

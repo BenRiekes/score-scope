@@ -24,7 +24,7 @@ import {
 } from "@mdi/js";
 
 import { 
-    Button, ButtonGroup, Heading, Menu, 
+    Button, ButtonGroup, Heading, Menu, Badge,
     MenuButton, MenuList, MenuItem, useDisclosure, Divider, VStack, StackDivider
 } from "@chakra-ui/react";
 
@@ -37,25 +37,33 @@ export default function NavBar() {
     const navigate = useNavigate();
 
     const [user, setUser] = useState(null); 
-    const [userBalance, setUserBalance] = useState('?');
-
+    const [userBalance, setUserBalance] = useState({matic: '?', usd: '?'});
 
     useEffect(() => {
-        if (user != null) {
-            setUserBalance(
-                getUserBalance(auth.currentUser.uid)
-            );
-        }
-    }, [user]);
-   
-    
-    auth.onAuthStateChanged((response) => {
-        if (auth.currentUser != undefined) {
-            setUser(response); 
-        }
-    });
 
-   
+        const authListener = auth.onAuthStateChanged(async (authRes) => {
+
+            if (authRes) {
+                setUser(authRes);
+                setUserBalance(await getUserBalance(authRes.uid));
+
+            } else {
+                setUser(null);
+                setUserBalance({ matic: '?', usd: '?' });
+            }
+        });
+    
+        return () => {
+          authListener();
+        };
+
+    }, []);
+
+    useEffect(() => {
+        console.log(userBalance);
+    },[userBalance]);
+    
+
     //------------------------------------------------------------------
 
     const handleLogOut = async () => {
@@ -145,7 +153,15 @@ export default function NavBar() {
                 <SignAction/>
 
                 <Button rightIcon = {<Icon path = {mdiWalletPlus} size = {1}/>}>
-                    Deposit
+                    
+                    <Badge ml='2' fontSize = '1em' colorScheme='purple'>
+                        {`MATIC: ${userBalance.matic}`}
+                    </Badge>
+
+                    <Badge ml='2' fontSize = '1em' colorScheme='purple'>
+                        {`USD: ${userBalance.usd}`}
+                    </Badge>
+                
                 </Button>
             </div>
 
