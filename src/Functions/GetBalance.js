@@ -12,7 +12,7 @@ export const getUserAddress = async (uid) => {
         return userDoc.data().wallet.address;
     }
 
-    return null; 
+    return; 
 }
 
 
@@ -26,7 +26,7 @@ export const getUserBalance = async (uid) => {
     const alchemy = new Alchemy(settings); 
     const address = await getUserAddress(uid);
     
-    if (address !== null) {
+    if (address) {
         const balanceRes = await alchemy.core.getBalance(address, 'latest')
 
         let maticBalance = parseInt(balanceRes._hex, 16);

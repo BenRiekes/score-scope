@@ -59,11 +59,7 @@ export default function NavBar() {
 
     }, []);
 
-    useEffect(() => {
-        console.log(userBalance);
-    },[userBalance]);
     
-
     //------------------------------------------------------------------
 
     const handleLogOut = async () => {
@@ -154,11 +150,16 @@ export default function NavBar() {
 
                 <Button rightIcon = {<Icon path = {mdiWalletPlus} size = {1}/>}>
                     
-                    <Badge ml='2' fontSize = '1em' colorScheme='purple'>
+                    <Badge 
+                        varient = 'subtle' fontSize = '1em' 
+                        colorScheme = 'blackAlpha'
+                    >
                         {`MATIC: ${userBalance.matic}`}
                     </Badge>
 
-                    <Badge ml='2' fontSize = '1em' colorScheme='purple'>
+                    <Badge varient = 'subtle' ml = '1'
+                        fontSize = '1em' colorScheme = 'blackAlpha'
+                    >
                         {`USD: ${userBalance.usd}`}
                     </Badge>
                 

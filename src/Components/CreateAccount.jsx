@@ -53,7 +53,6 @@ const CreateAccount = () => {
     });
 
     
-    
     //------------------------------------------------------------------
 
     const handleClose = () => { //Close form and reset all objects back to original state

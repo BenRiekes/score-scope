@@ -43,10 +43,6 @@ const LogIn = () => {
     
     const [loading, setLoading] = useState(false); 
 
-    useState(() => {
-        console.log(invalid)
-    }, [invalid]);
-
     //------------------------------------------------------------------
 
     const handleClose = () => {

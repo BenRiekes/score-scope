@@ -9,7 +9,7 @@ import "./PageStyles/ParlayStyles.css";
 
 import { 
     HStack, Button, ButtonGroup, Heading,
-    Flex, VStack, Box
+    Flex, VStack, Box, Container
 } from '@chakra-ui/react'; 
 
 import {
@@ -23,18 +23,16 @@ import {
     mdiBasketball, mdiFootball, mdiHockeyPuck, 
     mdiSoccer, mdiBaseball, mdiMixedMartialArts 
 } from '@mdi/js';
-import { getMaticPrice } from "../Functions/GetBalance";
 
-
+//Functions
+import { httpsCallable, getFunctions } from "firebase/functions";
 
 
 const Parlay = () => {
-
     //Style State: 
     const toast = useToast();
 
-    //Functional State:
-    const [teams, setTeams] = useState([]);
+    const [league, setLeague] = useState('NBA'); 
 
     const leagues = {
         NBA: true, NFL: false, NHL: false,
@@ -48,113 +46,37 @@ const Parlay = () => {
         { name: 'MLB', colorScheme: 'gray', icon: mdiBaseball },
         { name: 'MLS', colorScheme: 'gray', icon: mdiSoccer },
         { name: 'MMA', colorScheme: 'gray', icon: mdiMixedMartialArts },
-    ]; 
+    ];
+    
+    const nbaBoardFliters = [
+        {name: 'Points', selected: true},
+        {name: 'Rebounds', slected: false},
+        {name: 'Assist', selected: false},
+        {name: 'Steals', selected: false}, 
+        {name: 'Turnovers', selected: false}, 
 
+        {name: '3-PT Made', selected: false}, 
+        {name: 'FT Made', selected: false}, 
 
+        {name: 'Pts + Rebs + Asst', selected: false},
+        {name: 'Pts + Rebs', selected: false},
+        {name: 'Pts + Asst', selected: false},
+        {name: 'Blks + Stls', selected: false}, 
+    ]
+   
     //--------------------------------------------------------------------
 
-    // Function to get the players of a given team and season
-    const getTeamPlayers = (team, season) => {
-
-        return new Promise ((resolve, reject) => { 
-
-            const options = {
-                method: 'GET',
-                url: 'https://api-nba-v1.p.rapidapi.com/players',
     
-                params: {team: team, season: season},
-                headers: {
-                  'X-RapidAPI-Key': '01487261e9mshca9214823c98e4fp1c5658jsn894b41e1d37d',
-                  'X-RapidAPI-Host': 'api-nba-v1.p.rapidapi.com'
-                }
-            };
+    const handleAPITest = async() => {
 
-            axios.request(options).then((playerRes) => {
-
-                let players = []; 
-                let playerData = playerRes.data.response;
-                
-                if (!(playerData)) {
-                    players.push(null);
-                    return resolve (players);  
-                }
-    
-                for (let i = 0; i < playerData.length; i++) {
-    
-                    players.push({
-                        playerID: playerData[i].id, 
-                        playerName: playerData[i].firstname + ' ' + playerData[i].lastname
-                    }); 
-                }
-    
-                return resolve(players);
-                
-            }).catch((error) => {
-                return reject(error); 
-            });
-        })
-   
+        const createTeams = httpsCallable(getFunctions(), "createNBATeams");
+        
+        createTeams(); 
     }
 
-    const getTeams = () => {
+    
 
-        const options = {
-            method: 'GET',
-            url: 'https://api-nba-v1.p.rapidapi.com/teams',
-
-            headers: {
-                'X-RapidAPI-Key': '01487261e9mshca9214823c98e4fp1c5658jsn894b41e1d37d',
-                'X-RapidAPI-Host': 'api-nba-v1.p.rapidapi.com'
-            }
-        }
-
-        axios.request(options).then((teamRes) => {
-
-            let teamsArr = teamRes.data.response;
-            let teamsFinal = []; 
-            let promises = [];
-
-            for (let i = 0; i < teamsArr.length; i++) {
-
-                if (teamsArr[i].nbaFranchise) {
-
-                    let teamObj = {
-
-                        teamID: teamsArr[i].id,
-                        teamCode: teamsArr[i].code,
-                        teamName: teamsArr[i].name,
-                        teamNickname: teamsArr[i].nickname,
-                        teamCity: teamsArr[i].city,
-                        teamConference: teamsArr[i].leagues.standard.conference, //Test this
-                        teamDivision: teamsArr[i].leagues.standard.division,
-                        teamPlayers: {}
-                    }
-
-                    //Loop through each season from 2015 to 2022
-                    for (let season = 2015; season <= 2022; season++) {
-
-                        //Call getTeamPlayers, push the resulting Promise to the 'promises' array
-                        promises.push(
-                            getTeamPlayers(teamsArr[i].id, season).then((players) => {
-                                teamObj.teamPlayers[season] = players; 
-                            })
-                        )
-                    }
-
-                    teamsFinal.push(teamObj); 
-                }  
-            };
-
-            //Wait for all promises to resolve then set state
-            Promise.all(promises).then(() => {
-                setTeams(teamsFinal);
-            });
-
-        }).catch (function (error) {
-            console.error(error);
-        });
- 
-    }
+    //--------------------------------------------------------------------
 
 
     return (
@@ -163,16 +85,13 @@ const Parlay = () => {
 
             <HStack style = {{margin: '1.5%'}}>
 
-
                 <ButtonGroup varient = 'outline' spacing = '6' size = 'lg'>
 
                     <Heading style = {{color: 'white'}}>Leagues:</Heading>
 
-                    <Button 
-                        onClick = {getTeams}
-                    >
-                        Test API
-                    </Button>
+                    <Button onClick = {() => {
+                        handleAPITest();
+                    }}>Test API</Button>
 
                     {leagueButtons.map((button) => {
 
@@ -180,9 +99,10 @@ const Parlay = () => {
 
                             <Button
                                 key = {button.name}
+                                name = {button.name}
                                 colorScheme = {button.colorScheme}
                                 rightIcon = {<Icon path = {button.icon} size = {1} />}
-                                name = {button.name} onClick = {() => {
+                                onClick = {() => {
 
                                     if (!(leagues[button.name])) {
 
@@ -201,13 +121,52 @@ const Parlay = () => {
                             </Button>
                         ) 
                     })}
-
                 </ButtonGroup>
 
             </HStack>
 
-            <hr style = {{backgroundColor: "#2d2d2d"}}/>
+            <hr style = {{border: 'none', borderTop: '3px solid #2d2d2d'}}/>
+            
+            <Box 
+                bg = '#2d2d2d'
+                borderRadius = 'md' 
+                style = {{ margin: '1.5%', padding: '5px' }}
+            >
 
+                <VStack style = {{alignItems: 'flex-start', gap: '10px'}}>
+
+                    <ButtonGroup  
+                        spacing = '10' 
+                        size = 'lg' 
+                        colorScheme = 'whiteAlpha' 
+                        variant = 'link'
+                    >
+                        <Heading style = {{ color: 'white'}}>
+                            The Board:
+                        </Heading>
+
+                        <Button color = 'white'>How 2 Play</Button>
+                        <Button color = 'white'>Scoring Chart</Button>
+                        <Button color = 'white'>Prize Chart</Button>
+
+                    </ButtonGroup>
+                                    
+                    <ButtonGroup
+                        spacing = '5' size = 'sm'
+                        colorScheme = 'whiteAlpha' variant = 'outline' 
+                    >
+                        {nbaBoardFliters.map((button) => (
+                            <Button key = {button.name} borderRadius = 'xl' color = 'white'>
+                                {button.name}
+                            </Button>
+                        ))}
+
+                    </ButtonGroup>
+
+                </VStack>
+
+            </Box>
+           
         </div>
     )
 }
