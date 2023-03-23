@@ -9,6 +9,7 @@ export const getUserAddress = async (uid) => {
     const userDoc = await getDoc(userRef); 
 
     if (userDoc.exists()) {
+        
         return userDoc.data().wallet.address;
     }
 
@@ -18,19 +19,29 @@ export const getUserAddress = async (uid) => {
 
 export const getUserBalance = async (uid) => {
 
-    const settings = {
+    const maticSettings = {
         apiKey: "-j_EMb6mI2xbZMkcSOgXF-R34u_RpYv-",
         network: Network.GOERLI_TESTNET
     }; 
 
-    const alchemy = new Alchemy(settings); 
+    const alchemy = new Alchemy(maticSettings); 
     const address = await getUserAddress(uid);
     
     if (address) {
-        const balanceRes = await alchemy.core.getBalance(address, 'latest')
 
-        let maticBalance = parseInt(balanceRes._hex, 16);
-        let userBalance = ({matic: maticBalance.toString(), usd: '?'}); 
+        //Matic:
+        const maticResponse = await alchemy.core.getBalance(address, 'latest')
+        const maticBalance = parseInt(maticResponse._hex, 16);
+
+        //USD: 
+        const usdResponse = await axios.get(
+            'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd&precision=2'
+        ); 
+        const usdPrice = usdResponse.data['matic-network'].usd 
+        console.log(usdPrice);
+
+        const usdBalance = maticBalance * usdPrice; 
+        const userBalance = ({matic: maticBalance.toString(), usd: usdBalance.toString()}); 
     
         return userBalance;
     } 

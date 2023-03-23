@@ -92,7 +92,7 @@ exports.createNBATeams = functions.runWith({
     }
 
     try {
-        
+
         const response = await axios.request(teamOptions); 
         const teamRes = response.data.response; 
 
@@ -126,5 +126,37 @@ exports.createNBATeams = functions.runWith({
 
 
 
+/*
 
+    - Leagues: {
+
+        - NBA: {
+
+            - Active Parlays:
+
+            - Active Versus
+
+            - Seasons: {
+
+                - 2015: {
+
+                    - Teams: 
+
+                    - Standings: {
+
+                        conference: []
+                        division: []
+                    } 
+
+                    - Players: {
+                        games played: []
+                        averages: 
+                        averages against team: 
+                    }
+                }  
+            }
+
+        }
+    }
+*/
 

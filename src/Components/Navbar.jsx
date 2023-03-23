@@ -4,30 +4,25 @@ import { useState, useRef, useEffect } from "react";
 import { useResolvedPath, useNavigate, useMatch, Link, Outlet } from "react-router-dom";
 
 //Firebase:
-import { auth, db } from "../firebase-config";
-import { httpsCallable, getFunctions } from "firebase/functions";
-import { getAuth, createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword} from "firebase/auth"; 
+import { getAuth, signOut } from "firebase/auth"; 
 
-import { getUserBalance, getUserAddress} from "../Functions/GetBalance";
-
-
-//Style:
+//Functions:
 import LogIn from "./LogIn";
 import CreateAccount from "./CreateAccount";
+import { getUserBalance, getUserAddress} from "../Functions/GetBalance";
 
+//Style: 
 import Icon from "@mdi/react";
 import "./CompStyles/NavbarStyles.css"; 
 
 import { 
-    mdiChevronDown, mdiChevronUp, 
-    mdiTarget, mdiWalletPlus 
+    mdiChevronDown, mdiChevronUp, mdiTarget, mdiWalletPlus 
 } from "@mdi/js";
 
 import { 
     Button, ButtonGroup, Heading, Menu, Badge,
     MenuButton, MenuList, MenuItem, useDisclosure, Divider, VStack, StackDivider
 } from "@chakra-ui/react";
-
 
 
 export default function NavBar() {
@@ -58,6 +53,8 @@ export default function NavBar() {
         };
 
     }, []);
+
+    
 
     
     //------------------------------------------------------------------
