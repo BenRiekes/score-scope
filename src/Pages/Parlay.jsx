@@ -91,11 +91,14 @@ const Parlay = () => {
     //--------------------------------------------------------------------
 
     const handleLeagueChange = (e) => {
+        e.preventDefault();
 
         const leagues = {
             NBA: true, NFL: true,
             NHL: true, MLB: true, MLS: true
         };
+
+        if (league === e.target.name) return; 
 
         if (leagues[e.target.name] === false) {
 
@@ -107,9 +110,10 @@ const Parlay = () => {
                     duration: 1000,
                     isClosable: true,
                 })
-            ); 
+            );
+        } 
 
-        } else if (leagues[e.target.name] === undefined) {
+        if (leagues[e.target.name] === undefined) {
 
             return (
                 toast({
@@ -120,11 +124,10 @@ const Parlay = () => {
                     isClosable: true,
                 })
             );
+        } 
 
-        } else {
-            setLeague(e.target.name); 
-            return; 
-        }
+        setLeague(e.target.name);   
+        return; 
     }
 
     //--------------------------------------------------------------------
@@ -133,7 +136,7 @@ const Parlay = () => {
 
         const prevIndex = boardFilters[league].findIndex(filter => filter.isActive); 
         const newIndex = boardFilters[league].findIndex(filter => filter.name === e.target.name); 
-        
+       
         if (prevIndex !== newIndex) {
 
             setBoardFilters (prev => {
@@ -192,13 +195,13 @@ const Parlay = () => {
             <Box 
                 bg = '#2d2d2d'
                 borderRadius = 'md' 
-                style = {{ margin: '1.5%', padding: '5px' }}
+                style = {{ margin: '1.5%', padding: '.75%', width: '60%' }}
             >
 
                 <VStack style = {{alignItems: 'flex-start', gap: '10px'}}>
 
                     <ButtonGroup  
-                        spacing = '10' 
+                        spacing = '8' 
                         size = 'lg' 
                         colorScheme = 'whiteAlpha' 
                         variant = 'link'
@@ -213,7 +216,7 @@ const Parlay = () => {
 
                     </ButtonGroup>
                                     
-                    <ButtonGroup spacing = '5' size = 'sm'>
+                    <ButtonGroup spacing = '5' size = 'sm' >
 
                         {boardFilters[league].map((filter) => {
 
