@@ -21,7 +21,7 @@ import { useToast } from '@chakra-ui/react'
 
 import { 
     mdiBasketball, mdiFootball, mdiHockeyPuck, 
-    mdiSoccer, mdiBaseball, mdiMixedMartialArts 
+    mdiSoccer, mdiBaseball
 } from '@mdi/js';
 
 //Functions
@@ -29,55 +29,130 @@ import { httpsCallable, getFunctions } from "firebase/functions";
 
 
 const Parlay = () => {
-    //Style State: 
     const toast = useToast();
 
-    const [league, setLeague] = useState('NBA'); 
+    //States: ---------------------------------------------------------
+    const [league, setLeague] = useState('NBA');
 
-    const leagues = {
-        NBA: true, NFL: false, NHL: false,
-        MLB: false, MLS: false, MMA: false,    
-    }; 
+    const [leagueButtons, setLeagueButtons] = useState([
+        { name: 'NBA', icon: mdiBasketball },
+        { name: 'NFL', icon: mdiFootball },
+        { name: 'NHL', icon: mdiHockeyPuck },
+        { name: 'MLB', icon: mdiBaseball },
+        { name: 'MLS', icon: mdiSoccer }
+    ])
 
-    const leagueButtons = [
-        { name: 'NBA', colorScheme: 'purple', icon: mdiBasketball },
-        { name: 'NFL', colorScheme: 'gray', icon: mdiFootball },
-        { name: 'NHL', colorScheme: 'gray', icon: mdiHockeyPuck },
-        { name: 'MLB', colorScheme: 'gray', icon: mdiBaseball },
-        { name: 'MLS', colorScheme: 'gray', icon: mdiSoccer },
-        { name: 'MMA', colorScheme: 'gray', icon: mdiMixedMartialArts },
-    ];
-    
-    const nbaBoardFliters = [
-        {name: 'Points', selected: true},
-        {name: 'Rebounds', slected: false},
-        {name: 'Assist', selected: false},
-        {name: 'Steals', selected: false}, 
-        {name: 'Turnovers', selected: false}, 
+    const [boardFilters, setBoardFilters] = useState({
+        NBA: [
+            { name: 'Points', selected: true, isActive: true },
+            { name: 'Rebounds', selected: false, isActive: false },
+            { name: 'Assist', selected: false, isActive: false },
+            { name: 'Pts + Rebs + Asts', selected: false, isActive: false },
+            { name: 'Blks + Stls', selected: false, isActive: false },
+            { name: '3-PT Made', slected: false, isActive: false },
+            { name: 'FT Made', selected: false, isActive: false },
+        ],
+  
+        NFL: [
+            { name: 'Touchdowns', selected: false, isActive: true },
+            { name: 'Interceptions', selected: false, isActive: false },
+            { name: 'Completions', selected: false, isActive: false },
+            { name: 'Sacks', selected: false, isActive: false },
+            { name: 'Passing Yards', selected: false, isActive: false },
+            { name: 'Recieving Yards', slected: false, isActive: false },
+            { name: 'Rushing Yards', selected: false, isActive: false },
+        ],
+  
+        NHL: [
+            { name: 'Points', selected: false, isActive: true },
+            { name: 'Goals', selected: false, isActive: false },
+            { name: 'Assists', selected: false, isActive: false },
+            { name: 'Shots on Goal', selected: false, isActive: false },
+            { name: 'Goals Allowed', selected: false, isActive: false },
+            { name: 'Saves', selected: false, isActive: false },
+        ],
+  
+        MLB: [
+            { name: 'Hits', selected: false, isActive: true },
+            { name: 'Strikeouts', selected: false, isActive: false },
+            { name: 'Total Bases', selected: false, isActive: false },
+            { name: 'Hits + Walks', selected: false, isActive: false },
+            { name: 'Pitching Outs', selected: false, isActive: false },
+        ],
+  
+        MLS: [
+            { name: 'Goals', selected: false, isActive: true },
+            { name: 'Shots on Goal', selected: false, isActive: false },
+            { name: 'Saves', selected: false, isActive: false },
+            { name: 'Goals Allowed', selected: false, isActive: false },
+        ],
+    }); 
 
-        {name: '3-PT Made', selected: false}, 
-        {name: 'FT Made', selected: false}, 
-
-        {name: 'Pts + Rebs + Asst', selected: false},
-        {name: 'Pts + Rebs', selected: false},
-        {name: 'Pts + Asst', selected: false},
-        {name: 'Blks + Stls', selected: false}, 
-    ]
-   
     //--------------------------------------------------------------------
 
-    
-    const handleAPITest = async() => {
+    const handleLeagueChange = (e) => {
 
-        const createTeams = httpsCallable(getFunctions(), "createNBATeams");
-        
-        createTeams(); 
+        const leagues = {
+            NBA: true, NFL: true,
+            NHL: true, MLB: true, MLS: true
+        };
+
+        if (leagues[e.target.name] === false) {
+
+            return (
+                toast({
+                    position: 'top',
+                    title: e.target.name + ' is coming soon!',
+                    status: 'success',
+                    duration: 1000,
+                    isClosable: true,
+                })
+            ); 
+
+        } else if (leagues[e.target.name] === undefined) {
+
+            return (
+                toast({
+                    position: 'top',
+                    title: e.target.name + ' is not an offered league!',
+                    status: 'error',
+                    duration: 1000,
+                    isClosable: true,
+                })
+            );
+
+        } else {
+            setLeague(e.target.name); 
+            return; 
+        }
     }
 
-    
-
     //--------------------------------------------------------------------
 
+    const handleFilterChange = (e) => {
+
+        const prevIndex = boardFilters[league].findIndex(filter => filter.isActive); 
+        const newIndex = boardFilters[league].findIndex(filter => filter.name === e.target.name); 
+        
+        if (prevIndex !== newIndex) {
+
+            setBoardFilters (prev => {
+                
+                //Ref to array based on league useState
+                const updatedFilters = [...prev[league]]; 
+
+                //Set prevIndex to false:
+                updatedFilters[prevIndex] = { ...updatedFilters[prevIndex], isActive: false }; 
+
+                //Set newIndex to true:
+                updatedFilters[newIndex] = { ...updatedFilters[newIndex], isActive: true };
+                
+                return { ...prev, [league]: updatedFilters }; 
+            });
+        }
+    }
+
+    //--------------------------------------------------------------------
 
     return (
 
@@ -89,10 +164,6 @@ const Parlay = () => {
 
                     <Heading style = {{color: 'white'}}>Leagues:</Heading>
 
-                    <Button onClick = {() => {
-                        handleAPITest();
-                    }}>Test API</Button>
-
                     {leagueButtons.map((button) => {
 
                         return (
@@ -100,21 +171,12 @@ const Parlay = () => {
                             <Button
                                 key = {button.name}
                                 name = {button.name}
-                                colorScheme = {button.colorScheme}
+
                                 rightIcon = {<Icon path = {button.icon} size = {1} />}
-                                onClick = {() => {
-
-                                    if (!(leagues[button.name])) {
-
-                                        toast({
-                                            position: 'top',
-                                            title: 'Coming Soon!',
-                                            description: `${button.name} is coming to Score Scope soon!`,
-                                            status: 'success',
-                                            duration: 1000,
-                                            isClosable: true,
-                                        })
-                                    }
+                                colorScheme = {button.name === league ? 'purple' : 'whiteAlpha'}
+                                
+                                onClick = {(e) => {
+                                    handleLeagueChange(e); 
                                 }}
                             >
                                 {button.name}
@@ -151,15 +213,27 @@ const Parlay = () => {
 
                     </ButtonGroup>
                                     
-                    <ButtonGroup
-                        spacing = '5' size = 'sm'
-                        colorScheme = 'whiteAlpha' variant = 'outline' 
-                    >
-                        {nbaBoardFliters.map((button) => (
-                            <Button key = {button.name} borderRadius = 'xl' color = 'white'>
-                                {button.name}
-                            </Button>
-                        ))}
+                    <ButtonGroup spacing = '5' size = 'sm'>
+
+                        {boardFilters[league].map((filter) => {
+
+                            return (
+
+                                <Button 
+                                    key = {filter.name} name = {filter.name}
+                                    borderRadius = 'xl' color = 'white'
+
+                                    colorScheme = {filter.isActive ? 'purple' : 'whiteAlpha'} 
+                                    variant = {filter.isActive ? 'solid' : 'outline'} 
+
+                                    onClick = {(e) => {
+                                        handleFilterChange(e);
+                                    }}
+                                >
+                                    {filter.name}
+                                </Button>
+                            )
+                        })}
 
                     </ButtonGroup>
 

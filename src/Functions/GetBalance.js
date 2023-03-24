@@ -8,8 +8,7 @@ export const getUserAddress = async (uid) => {
     const userRef = doc(db, "users", uid);
     const userDoc = await getDoc(userRef); 
 
-    if (userDoc.exists()) {
-        
+    if (userDoc.exists()) { 
         return userDoc.data().wallet.address;
     }
 
@@ -38,7 +37,6 @@ export const getUserBalance = async (uid) => {
             'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd&precision=2'
         ); 
         const usdPrice = usdResponse.data['matic-network'].usd 
-        console.log(usdPrice);
 
         const usdBalance = maticBalance * usdPrice; 
         const userBalance = ({matic: maticBalance.toString(), usd: usdBalance.toString()}); 
