@@ -28,6 +28,7 @@ import {
 } from '@mdi/js';
 
 //Functions
+import PrizeChart from "../Components/PrizeChart";
 import ScoringChart from "../Components/ScoringChart";
 
 const Parlay = () => {
@@ -248,9 +249,9 @@ const Parlay = () => {
                         </Heading>
 
                         <Button color = 'white'>How 2 Play</Button>
+                        <PrizeChart />
                         <ScoringChart defaultIndex = {selectedLeague}/>
-                        <Button color = 'white'>Prize Chart</Button>
-
+                       
                     </ButtonGroup>
                                     
                     <ButtonGroup spacing = '5' size = 'sm'>

@@ -225,6 +225,8 @@ const ScoringChart = (selectedLeague) => {
                     </Tbody>
                 </Table>
 
+                
+
             </TableContainer>
         ));
     } 
@@ -236,7 +238,9 @@ const ScoringChart = (selectedLeague) => {
     return (
 
         <>
-            <Button onClick={onOpen}>Scoring Chart</Button>
+            <Button color = 'white' onClick = {onOpen}>
+                Scoring Chart
+            </Button>
     
             <Modal
                 size = 'md' 
@@ -256,9 +260,8 @@ const ScoringChart = (selectedLeague) => {
 
                         <Tabs 
                             defaultIndex = {defaultIndex}
-                            variant='enclosed' align = 'start'
+                            variant='enclosed' isFitted
                         >
-                            
                             <TabList>
                                
                                 {scoringTabs.map((tab) => {
