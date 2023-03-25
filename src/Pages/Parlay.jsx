@@ -32,127 +32,163 @@ const Parlay = () => {
     const toast = useToast();
 
     //States: ---------------------------------------------------------
-    const [league, setLeague] = useState('NBA');
+    const [selectedLeague, setSelectedLeague] = useState('NBA');
 
-    const [leagueButtons, setLeagueButtons] = useState([
-        { name: 'NBA', icon: mdiBasketball },
-        { name: 'NFL', icon: mdiFootball },
-        { name: 'NHL', icon: mdiHockeyPuck },
-        { name: 'MLB', icon: mdiBaseball },
-        { name: 'MLS', icon: mdiSoccer }
-    ])
+    const [parlayBoard, setParlayBoard] = useState({
 
-    const [boardFilters, setBoardFilters] = useState({
-        NBA: [
-            { name: 'Points', selected: true, isActive: true },
-            { name: 'Rebounds', selected: false, isActive: false },
-            { name: 'Assist', selected: false, isActive: false },
-            { name: 'Pts + Rebs + Asts', selected: false, isActive: false },
-            { name: 'Blks + Stls', selected: false, isActive: false },
-            { name: '3-PT Made', slected: false, isActive: false },
-            { name: 'FT Made', selected: false, isActive: false },
-        ],
-  
-        NFL: [
-            { name: 'Touchdowns', selected: false, isActive: true },
-            { name: 'Interceptions', selected: false, isActive: false },
-            { name: 'Completions', selected: false, isActive: false },
-            { name: 'Sacks', selected: false, isActive: false },
-            { name: 'Passing Yards', selected: false, isActive: false },
-            { name: 'Recieving Yards', slected: false, isActive: false },
-            { name: 'Rushing Yards', selected: false, isActive: false },
-        ],
-  
-        NHL: [
-            { name: 'Points', selected: false, isActive: true },
-            { name: 'Goals', selected: false, isActive: false },
-            { name: 'Assists', selected: false, isActive: false },
-            { name: 'Shots on Goal', selected: false, isActive: false },
-            { name: 'Goals Allowed', selected: false, isActive: false },
-            { name: 'Saves', selected: false, isActive: false },
-        ],
-  
-        MLB: [
-            { name: 'Hits', selected: false, isActive: true },
-            { name: 'Strikeouts', selected: false, isActive: false },
-            { name: 'Total Bases', selected: false, isActive: false },
-            { name: 'Hits + Walks', selected: false, isActive: false },
-            { name: 'Pitching Outs', selected: false, isActive: false },
-        ],
-  
-        MLS: [
-            { name: 'Goals', selected: false, isActive: true },
-            { name: 'Shots on Goal', selected: false, isActive: false },
-            { name: 'Saves', selected: false, isActive: false },
-            { name: 'Goals Allowed', selected: false, isActive: false },
-        ],
+        NBA: {
+            filters: [
+                { name: 'Points', isActive: true },
+                { name: 'Rebounds', isActive: false },
+                { name: 'Assist', isActive: false },
+                { name: 'Pts + Rebs + Asts', isActive: false },
+                { name: 'Blks + Stls', isActive: false },
+                { name: '3-PT Made', isActive: false },
+                { name: 'FT Made', isActive: false },
+            ]
+        }, 
+
+        NFL: {
+            filters: [
+                { name: 'Touchdowns', isActive: true },
+                { name: 'Interceptions', isActive: false },
+                { name: 'Completions', isActive: false },
+                { name: 'Sacks', isActive: false },
+                { name: 'Passing Yards', isActive: false },
+                { name: 'Recieving Yards', isActive: false },
+                { name: 'Rushing Yards', isActive: false },
+            ]
+        },
+
+        NHL: {
+            filters: [
+                { name: 'Points', isActive: true },
+                { name: 'Goals', isActive: false },
+                { name: 'Assists', isActive: false },
+                { name: 'Shots on Goal', isActive: false },
+                { name: 'Goals Allowed', isActive: false },
+                { name: 'Saves', isActive: false },
+            ]
+        }, 
+
+        MLB: {
+            filters: [
+                { name: 'Hits', isActive: true },
+                { name: 'Strikeouts', isActive: false },
+                { name: 'Total Bases', isActive: false },
+                { name: 'Hits + Walks', isActive: false },
+                { name: 'Pitching Outs', isActive: false },
+            ]
+        }, 
+
+        MLS: {
+            filters: [
+                { name: 'Goals', isActive: true },
+                { name: 'Shots on Goal', isActive: false },
+                { name: 'Saves', isActive: false },
+                { name: 'Goals Allowed', isActive: false },
+            ]
+        },
+
+        leagueButtons: [
+            { name: 'NBA', isActive: true, icon: mdiBasketball },
+            { name: 'NFL', isActive: false, icon: mdiFootball },
+            { name: 'NHL', isActive: false, icon: mdiHockeyPuck },
+            { name: 'MLB', isActive: false, icon: mdiBaseball },
+            { name: 'MLS', isActive: false, icon: mdiSoccer }
+        ], 
     }); 
 
+    
     //--------------------------------------------------------------------
 
-    const handleLeagueChange = (e) => {
-        e.preventDefault();
+    const handleLeagueChange = (buttonName) => {
 
-        const leagues = {
-            NBA: true, NFL: true,
+        //Check if league is current being offered
+
+        const validLeagues = {
+            NBA: true, NFL: true, 
             NHL: true, MLB: true, MLS: true
-        };
+        }
 
-        if (league === e.target.name) return; 
-
-        if (leagues[e.target.name] === false) {
+        if (!(validLeagues[buttonName])) { 
 
             return (
                 toast({
                     position: 'top',
-                    title: e.target.name + ' is coming soon!',
+                    title: buttonName + ' is coming soon!',
                     status: 'success',
                     duration: 1000,
                     isClosable: true,
-                })
-            );
-        } 
+                })  
+            )
+        }
 
-        if (leagues[e.target.name] === undefined) {
+        //--------------------------------------
 
-            return (
-                toast({
-                    position: 'top',
-                    title: e.target.name + ' is not an offered league!',
-                    status: 'error',
-                    duration: 1000,
-                    isClosable: true,
-                })
-            );
-        } 
+        //Get index of the current active button
+        const prevIndex = parlayBoard.leagueButtons.findIndex(
+            button => button.isActive === true
+        ); 
+        
+        //Get index of the new button
+        const newIndex = parlayBoard.leagueButtons.findIndex(
+            button => button.name === buttonName
+        );
 
-        setLeague(e.target.name);   
-        return; 
+        if (prevIndex === newIndex) return; 
+        
+        //Set state 
+        setParlayBoard(prev => {
+
+            const updatedButtons = [...prev.leagueButtons]; 
+
+            updatedButtons[prevIndex] = {
+                ...updatedButtons[prevIndex], isActive: false
+            }; 
+
+            updatedButtons[newIndex] = {
+                ...updatedButtons[newIndex], isActive: true
+            };
+            
+            return { ...prev, leagueButtons: updatedButtons }; 
+        }); 
+
+        setSelectedLeague(buttonName);
     }
 
     //--------------------------------------------------------------------
 
-    const handleFilterChange = (e) => {
+    const handleFilterChange = (filterName) => {
 
-        const prevIndex = boardFilters[league].findIndex(filter => filter.isActive); 
-        const newIndex = boardFilters[league].findIndex(filter => filter.name === e.target.name); 
-       
-        if (prevIndex !== newIndex) {
+        const prevIndex = parlayBoard[selectedLeague].filters.findIndex(
+            filter => filter.isActive === true
+        ); 
 
-            setBoardFilters (prev => {
-                
-                //Ref to array based on league useState
-                const updatedFilters = [...prev[league]]; 
+        const newIndex = parlayBoard[selectedLeague].filters.findIndex(
+            filter => filter.name === filterName
+        ); 
 
-                //Set prevIndex to false:
-                updatedFilters[prevIndex] = { ...updatedFilters[prevIndex], isActive: false }; 
+        if (prevIndex === newIndex) return; 
 
-                //Set newIndex to true:
-                updatedFilters[newIndex] = { ...updatedFilters[newIndex], isActive: true };
-                
-                return { ...prev, [league]: updatedFilters }; 
-            });
-        }
+        setParlayBoard(prev => {
+
+            const updatedFilters = [...prev[selectedLeague].filters]; 
+
+            updatedFilters[prevIndex] = {
+                ...updatedFilters[prevIndex], isActive: false
+            }; 
+
+            updatedFilters[newIndex] = {
+                ...updatedFilters[newIndex], isActive: true
+            };
+            
+            return {
+                ...prev, [selectedLeague]: {
+                    ...prev[selectedLeague], filters: updatedFilters
+                }
+            }
+        })
     }
 
     //--------------------------------------------------------------------
@@ -167,20 +203,19 @@ const Parlay = () => {
 
                     <Heading style = {{color: 'white'}}>Leagues:</Heading>
 
-                    {leagueButtons.map((button) => {
+                    {parlayBoard.leagueButtons.map((button) => {
 
                         return (
-
                             <Button
                                 key = {button.name}
-                                name = {button.name}
 
                                 rightIcon = {<Icon path = {button.icon} size = {1} />}
-                                colorScheme = {button.name === league ? 'purple' : 'whiteAlpha'}
-                                
-                                onClick = {(e) => {
-                                    handleLeagueChange(e); 
+                                colorScheme = {selectedLeague === button.name ? 'purple' : 'whiteAlpha'}
+
+                                onClick = {() => {
+                                    handleLeagueChange(button.name); 
                                 }}
+                                
                             >
                                 {button.name}
                             </Button>
@@ -216,21 +251,21 @@ const Parlay = () => {
 
                     </ButtonGroup>
                                     
-                    <ButtonGroup spacing = '5' size = 'sm' >
+                    <ButtonGroup spacing = '5' size = 'sm'>
 
-                        {boardFilters[league].map((filter) => {
+                        {parlayBoard[selectedLeague].filters.map((filter) => {
 
                             return (
 
                                 <Button 
-                                    key = {filter.name} name = {filter.name}
+                                    key = {filter.name} 
                                     borderRadius = 'xl' color = 'white'
 
                                     colorScheme = {filter.isActive ? 'purple' : 'whiteAlpha'} 
                                     variant = {filter.isActive ? 'solid' : 'outline'} 
 
-                                    onClick = {(e) => {
-                                        handleFilterChange(e);
+                                    onClick = {() => {
+                                        handleFilterChange(filter.name);
                                     }}
                                 >
                                     {filter.name}
