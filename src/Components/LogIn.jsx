@@ -90,8 +90,6 @@ const LogIn = () => {
 
         //Static error check: ----------------------------------
 
-        
-
         const finalCheck = () => {
             let trigger;
 
@@ -236,6 +234,7 @@ const LogIn = () => {
                                 Log In
                             </Button>
                         </VStack>
+                        
                     </ModalBody>
                 </ModalContent>
             </Modal>

@@ -1,7 +1,11 @@
 //React Imports:
 import React from "react";
 import { useState, useRef, useEffect } from "react";
+
+//Firebase:
 import axios from 'axios'
+import { httpsCallable, getFunctions } from "firebase/functions";
+
 
 //Styling:
 import Icon from '@mdi/react';
@@ -14,10 +18,9 @@ import {
 
 import {
     Accordion, AccordionItem, AccordionButton, 
-    AccordionPanel, AccordionIcon, Spacer, Divider
+    AccordionPanel, AccordionIcon, Spacer, Divider, useToast
 } from '@chakra-ui/react'
 
-import { useToast } from '@chakra-ui/react'
 
 import { 
     mdiBasketball, mdiFootball, mdiHockeyPuck, 
@@ -25,8 +28,7 @@ import {
 } from '@mdi/js';
 
 //Functions
-import { httpsCallable, getFunctions } from "firebase/functions";
-
+import ScoringChart from "../Components/ScoringChart";
 
 const Parlay = () => {
     const toast = useToast();
@@ -45,7 +47,7 @@ const Parlay = () => {
                 { name: 'Blks + Stls', isActive: false },
                 { name: '3-PT Made', isActive: false },
                 { name: 'FT Made', isActive: false },
-            ]
+            ],
         }, 
 
         NFL: {
@@ -246,7 +248,7 @@ const Parlay = () => {
                         </Heading>
 
                         <Button color = 'white'>How 2 Play</Button>
-                        <Button color = 'white'>Scoring Chart</Button>
+                        <ScoringChart defaultIndex = {selectedLeague}/>
                         <Button color = 'white'>Prize Chart</Button>
 
                     </ButtonGroup>
