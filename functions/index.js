@@ -217,42 +217,47 @@ const getTeamStandings = async(teamId, season, conference, division) => {
         }
     }
 
-    try {
+    let retryAttempts = 1; 
 
-        let standings = {
-            conferenceRank: null, divisionRank: null,
-            stats: { wins: null, losses: null }
+    while (retryAttempts <= 3) {
+
+        try {
+
+            const response = await axios(teamStandingsOptions); 
+            const standingsRes = response.data.response[0];
+    
+            let teamStandings = {
+    
+                conferenceRank: standingsRes.conference.rank,
+                divisionRank: standingsRes.division.rank,
+    
+                wins: {
+                  total: standingsRes.win.total,
+                  home: standingsRes.win.home,
+                  away: standingsRes.win.away,
+                  percentage: standingsRes.win.percentage
+                },
+    
+                losses: {
+                  total: standingsRes.loss.total,
+                  home: standingsRes.loss.home,
+                  away: standingsRes.loss.away,
+                  percentage: standingsRes.loss.percentage
+                }
+            }
+     
+            return teamStandings; 
+             
+        } catch (error) {
+
+            retryAttempts++; 
         }
-
-        const response = await axios(teamStandingsOptions); 
-        const standingsRes = response.data.response;
-        
-        standings.conferenceRank = standingsRes[0].conference.rank; 
-        standings.divisionRank = standingsRes[0].division.rank; 
-
-        standings.stats.wins = {
-            total: standingsRes[0].win.total,
-            home: standingsRes[0].win.home,
-            away: standingsRes[0].win.away,
-            percentage: standingsRes[0].win.percentage
-        }; 
-
-        standings.stats.losses = {
-            total: standingsRes[0].loss.total,
-            home: standingsRes[0].loss.home,
-            away: standingsRes[0].loss.away,
-            percentage: standingsRes[0].win.percentage
-        }
-
-        return standings; 
-
-    } catch (error) {
-        console.log('team standings');
-        functions.logger.error(error); 
     }
+
+    return {}; 
 }
 
-
+//--------------------------------------------------------------------------------------------
 
 exports.createNBATeams = functions.runWith ({
     timeoutSeconds: 540, maxInstances: 100, memory: '1GB' 
@@ -281,16 +286,22 @@ exports.createNBATeams = functions.runWith ({
         const response = await axios.request(teamOptions); 
         const teamRes = response.data.response[0];
 
+
         let results = []; 
         
         for (let j = 2015; j <= 2022; j++) {
 
             const season = j;  
 
-            const [roster, games, stats] = await Promise.all([
+            const [roster, games, stats, standings] = await Promise.all([
                 getTeamRoster(teamId, season),
                 getTeamGames(teamId, season),
-                getTeamStats(teamId, season)
+                getTeamStats(teamId, season),
+                getTeamStandings(
+                    teamId, season, 
+                    teamRes.leagues.standard.conference, 
+                    teamRes.leagues.standard.division
+                )
             ])
 
             const teamData = {
@@ -305,8 +316,11 @@ exports.createNBATeams = functions.runWith ({
 
                 roster,
                 games,
-                stats
+                stats,
+                standings
             }
+
+            console.log(teamData.standings);
 
             //Leagues => NBA => Seasons => Year (j) => Teams => teamID (i.id)
             const docRef = db
@@ -345,5 +359,7 @@ exports.createNBATeams = functions.runWith ({
 
     await processTeam(0); 
 })
+
+//--------------------------------------------------------------------------------------------
 
 

@@ -200,7 +200,7 @@ export const getTeamStandings = async(teamId, season, conference, division) => {
 
         let standings = {
             conferenceRank: null, divisionRank: null,
-            stats: { wins: null, losses: null }
+            wins: null, losses: null
         }
 
         const response = await axios(teamStandingsOptions); 
@@ -210,14 +210,14 @@ export const getTeamStandings = async(teamId, season, conference, division) => {
         standings.conferenceRank = standingsRes[0].conference.rank; 
         standings.divisionRank = standingsRes[0].division.rank; 
 
-        standings.stats.wins = {
+        standings.wins = {
             total: standingsRes[0].win.total,
             home: standingsRes[0].win.home,
             away: standingsRes[0].win.away,
             percentage: standingsRes[0].win.percentage
         }; 
 
-        standings.stats.losses = {
+        standings.losses = {
             total: standingsRes[0].loss.total,
             home: standingsRes[0].loss.home,
             away: standingsRes[0].loss.away,

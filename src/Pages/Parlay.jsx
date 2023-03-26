@@ -202,15 +202,9 @@ const Parlay = () => {
 
     const testAPI = async() => {
 
-        let arr = [];
-        const standings = await getNBATeamData();
         
-        for (let i = 0; i < standings.length; i++) {
-
-            arr.push(standings[i].id); 
-        }
-
-        console.log(arr);
+        const standings = await getTeamStandings(1, 2020, 'East', 'Southeast');
+        console.log(standings);
     }
 
     return (
