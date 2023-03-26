@@ -12,24 +12,21 @@ import Icon from '@mdi/react';
 import "./PageStyles/ParlayStyles.css";
 
 import { 
-    HStack, Button, ButtonGroup, Heading,
-    Flex, VStack, Box, Container
+    HStack, Button, ButtonGroup, 
+    Heading, Flex, VStack, Box, useToast
 } from '@chakra-ui/react'; 
 
-import {
-    Accordion, AccordionItem, AccordionButton, 
-    AccordionPanel, AccordionIcon, Spacer, Divider, useToast
-} from '@chakra-ui/react'
-
-
 import { 
-    mdiBasketball, mdiFootball, mdiHockeyPuck, 
-    mdiSoccer, mdiBaseball
+    mdiBasketball, mdiFootball, 
+    mdiHockeyPuck, mdiSoccer, mdiBaseball
 } from '@mdi/js';
 
-//Functions
+//Modals
 import PrizeChart from "../Components/PrizeChart";
 import ScoringChart from "../Components/ScoringChart";
+
+//Test Functions:
+import { getNBATeamData, getTeamGames, getTeamRoster, getTeamStandings, getTeamStats } from "../Functions/APITest";
 
 const Parlay = () => {
     const toast = useToast();
@@ -196,6 +193,26 @@ const Parlay = () => {
 
     //--------------------------------------------------------------------
 
+    const testDB = async () => {
+       const createTeams = httpsCallable(getFunctions(), 'createNBATeams');
+       const res = await createTeams(); 
+
+       console.log(res);
+    }
+
+    const testAPI = async() => {
+
+        let arr = [];
+        const standings = await getNBATeamData();
+        
+        for (let i = 0; i < standings.length; i++) {
+
+            arr.push(standings[i].id); 
+        }
+
+        console.log(arr);
+    }
+
     return (
 
         <div className = "parlay-wrapper">
@@ -205,6 +222,14 @@ const Parlay = () => {
                 <ButtonGroup varient = 'outline' spacing = '6' size = 'lg'>
 
                     <Heading style = {{color: 'white'}}>Leagues:</Heading>
+
+                    <Button onClick = {() => {
+                        testAPI();
+                    }}>Test API</Button>
+
+                    <Button onClick = {() => {
+                        testDB();
+                    }}>Test DB</Button>
 
                     {parlayBoard.leagueButtons.map((button) => {
 

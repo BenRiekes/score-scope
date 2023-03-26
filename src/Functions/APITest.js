@@ -1,58 +1,10 @@
-import axios from 'axios'
-
-//Old Key: 01487261e9mshca9214823c98e4fp1c5658jsn894b41e1d37d
-
-// Function to get the players of a given team and season
-export const getTeamPlayers = (team, season) => {
-
-    return new Promise ((resolve, reject) => { 
-
-        const options = {
-            method: 'GET',
-            url: 'https://v2.nba.api-sports.io/players',
-
-            params: {team: team, season: season},
-            headers: {
-                'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
-                'x-rapidapi-host': 'v2.nba.api-sports.io'
-            }
-        };
-
-        axios.request(options).then((playerRes) => {
-
-            console.log(playerRes.data.response);
-
-            let players = []; 
-            let playerData = playerRes.data.response;
-            
-            if (!(playerData)) {
-                players.push(null);
-                resolve (players);  
-            }
-
-            for (let i = 0; i < playerData.length; i++) {
-
-                players.push({
-                    playerID: playerData[i].id, 
-                    playerName: playerData[i].firstname + ' ' + playerData[i].lastname
-                }); 
-            }
-
-            resolve(players);
-            
-        }).catch((error) => {
-            console.log(error);
-            reject(error); 
-        });
-    })
-
-}
-
-//Gets all teams and their rosters from 2015 => 2022
-export const getTeams = () => {
+import axios from "axios";
 
 
-    const options = {
+export const getNBATeamData = async () => {
+
+    //Axios request to get team ids
+    const teamOptions = {
         method: 'GET',
         url: 'https://v2.nba.api-sports.io/teams',
 
@@ -62,53 +14,219 @@ export const getTeams = () => {
         }
     }
 
-    axios.request(options).then((teamRes) => {
 
-        let teamsArr = teamRes.data.response;
-        let teamsFinal = []; 
-        let promises = [];
+    try {
 
-        for (let i = 0; i < teamsArr.length; i++) {
+        const response = await axios.request(teamOptions); 
+        const teamRes = response.data.response; 
 
-            if (teamsArr[i].nbaFranchise) {
+        let teams = []; 
 
-                let teamObj = {
+        for (let i = 0; i < teamRes.length; i++) {
 
-                    teamID: teamsArr[i].id,
-                    teamCode: teamsArr[i].code,
-                    teamName: teamsArr[i].name,
-                    teamNickname: teamsArr[i].nickname,
-                    teamCity: teamsArr[i].city,
-                    teamConference: teamsArr[i].leagues.standard.conference, //Test this
-                    teamDivision: teamsArr[i].leagues.standard.division,
-                    teamPlayers: {}
+            if (teamRes[i].nbaFranchise && teamRes[i].id != 37) {
+
+                //Basic Team Data: ------------------------------
+
+                let teamData = {
+                    id: teamRes[i].id,
+                    code: teamRes[i].code,
+                    name: teamRes[i].name,
+
+                    nickname: teamRes[i].nickname,
+                    city: teamRes[i].city,
+
+                    conference: teamRes[i].leagues.standard.conference,
+                    division: teamRes[i].leagues.standard.division,
                 }
 
-                //Loop through each season from 2015 to 2022
-                for (let season = 2015; season <= 2022; season++) {
+                teams.push(teamData);
 
-                    //Call getTeamPlayers, push the resulting Promise to the 'promises' array
-                    promises.push(
-                        getTeamPlayers(teamsArr[i].id, season).then((players) => {
-                            teamObj.teamPlayers[season] = players; 
-                        })
-                    )
-                }
+            }
+           
+        }
 
-                teamsFinal.push(teamObj);
-            }  
-        };
+        return teams; 
 
-        //Wait for all promises to resolve then set state
-        Promise.all(promises).then(() => {
-            return teamsFinal;
+    } catch (error) {
+        console.log(error);
+    }
+} 
 
-        }).catch ((error) => {
-            console.log(error);
-        })
+//-----------------------------------------------------------------
 
-    }).catch ((error) => {
-        console.error(error);
-    });
+export const getTeamGames = async(teamId, season) => {
 
+    const teamGameOptions = {
+        method: 'GET',
+        url: 'https://v2.nba.api-sports.io/games',
+
+        params: {
+            league: 'standard', season: season, team: teamId,
+        },
+
+        headers: {
+            'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+            'x-rapidapi-host': 'v2.nba.api-sports.io'
+        }
+    }
+
+    try {
+
+        let games = {
+            homeWins: [], homeLosses: [],
+            awayWins: [], awayLosses: [],
+        }; 
+
+        const response = await axios(teamGameOptions);
+        const gameRes = response.data.response;
+
+        //--------------------------------------------------
+
+        for (let i = 0; i < gameRes.length; i++) {
+
+            const gameId = gameRes[i].id; 
+            const homeScore = gameRes[i].scores.home.points; 
+            const visitorScore = gameRes[i].scores.visitors.points;
+            const isHomeGame = gameRes[i].teams.home.id === teamId ? true : false; 
+            
+            let opponentId; 
+            
+            if (isHomeGame) {
+                opponentId = gameRes[i].teams.visitors.id;
+
+                homeScore > visitorScore 
+                ? games.homeWins.push({gameId: gameId, opponentId: opponentId}) 
+                : games.homeLosses.push({gameId: gameId, oponentId: opponentId})
+
+            } else if (!(isHomeGame)) {
+                opponentId = gameRes[i].teams.home.id; 
+
+                homeScore < visitorScore 
+                ? games.awayWins.push({gameId: gameId, opponentId: opponentId}) 
+                : games.awayLosses.push({gameId: gameId, opponentId: opponentId})
+            }
+        }
+
+        return games; 
+
+    } catch (error) {
+        console.log('team games');
+    }
+}
+
+//-----------------------------------------------------------------
+
+export const getTeamStats = async(teamId, season) => {
+
+    const teamStatsOptions = {
+        method: 'GET',
+        url: 'https://v2.nba.api-sports.io/teams/statistics',
+
+        params: { id: teamId, season: season},
+        headers: {
+            'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+            'x-rapidapi-host': 'v2.nba.api-sports.io'
+        }
+    }
+
+    try {
+        const response = await axios(teamStatsOptions); 
+        const statsRes = response.data.response; 
+
+        return statsRes[0]; 
+
+    } catch (error) {
+        console.log('team stats');
+    }
+}
+
+//-----------------------------------------------------------------
+
+export const getTeamRoster = async(teamId, season) => {
+
+    const teamRosterOptions = {
+        method: 'GET',
+        url: 'https://v2.nba.api-sports.io/players',
+
+        params: { team: teamId, season: season},
+        headers: {
+            'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+            'x-rapidapi-host': 'v2.nba.api-sports.io'
+        }
+    }
+
+    try {
+
+        let teamRoster = []; 
+        const response = await axios(teamRosterOptions); 
+        const rosterRes = response.data.response;
+
+        for (let i = 0; i < rosterRes.length; i++) {
+
+            teamRoster.push({ 
+                playerId: rosterRes[i].id, 
+                playerName: rosterRes[i].firstname + ' ' + rosterRes[i].lastname
+            }); 
+        }
+
+        return teamRoster; 
+
+    } catch (error) {
+        console.log('team roster');
+    }
+}
+
+//-----------------------------------------------------------------
+
+export const getTeamStandings = async(teamId, season, conference, division) => {
+
+    const teamStandingsOptions = {
+        method: 'GET',
+        url: 'https://v2.nba.api-sports.io/standings',
+
+        params: { 
+            league: 'standard', season: season, team: teamId,
+            conference: conference, division: division
+        },
+
+        headers: {
+            'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+            'x-rapidapi-host': 'v2.nba.api-sports.io'
+        }
+    }
+
+    try {
+
+        let standings = {
+            conferenceRank: null, divisionRank: null,
+            stats: { wins: null, losses: null }
+        }
+
+        const response = await axios(teamStandingsOptions); 
+        const standingsRes = response.data.response;
+
+       
+        standings.conferenceRank = standingsRes[0].conference.rank; 
+        standings.divisionRank = standingsRes[0].division.rank; 
+
+        standings.stats.wins = {
+            total: standingsRes[0].win.total,
+            home: standingsRes[0].win.home,
+            away: standingsRes[0].win.away,
+            percentage: standingsRes[0].win.percentage
+        }; 
+
+        standings.stats.losses = {
+            total: standingsRes[0].loss.total,
+            home: standingsRes[0].loss.home,
+            away: standingsRes[0].loss.away,
+            percentage: standingsRes[0].win.percentage
+        }
+
+        return standings; 
+
+    } catch (error) {
+        console.log('team standings');
+    }
 }

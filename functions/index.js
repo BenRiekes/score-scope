@@ -5,7 +5,6 @@ const functions = require ("firebase-functions");
 //Func:
 admin.initializeApp(); 
 const db = admin.firestore();
-const batch = admin.firestore().batch();
 
 const axios = require("axios"); 
 const Wallet = require('ethereumjs-wallet').default
@@ -154,7 +153,7 @@ const getTeamStats = async(teamId, season) => {
         const response = await axios(teamStatsOptions); 
         const statsRes = response.data.response; 
 
-        return statsRes; 
+        return statsRes[0]; 
 
     } catch (error) {
         console.log('team stats');
@@ -187,7 +186,7 @@ const getTeamRoster = async(teamId, season) => {
 
             teamRoster.push({ 
                 playerId: rosterRes[i].id, 
-                playerName: rosterRes[i].firstname + ' ' + rosterRes[i].lastName
+                playerName: rosterRes[i].firstname + ' ' + rosterRes[i].lastname
             }); 
         }
 
@@ -205,7 +204,7 @@ const getTeamStandings = async(teamId, season, conference, division) => {
 
     const teamStandingsOptions = {
         method: 'GET',
-        url: 'https://v2.nba.api-sports.io/players',
+        url: 'https://v2.nba.api-sports.io/standings',
 
         params: { 
             league: 'standard', season: season, team: teamId,
@@ -255,79 +254,96 @@ const getTeamStandings = async(teamId, season, conference, division) => {
 
 
 
-exports.NBATeamData = functions.runWith ({
-    timeoutSeconds: 300, maxInstances: 100, memory: '1GB' 
+exports.createNBATeams = functions.runWith ({
+    timeoutSeconds: 540, maxInstances: 100, memory: '1GB' 
 
-}).https.onRequest(async (req, res) => {
+}).https.onCall(async (data, context) => {
 
-    //Axios request to get team ids
-    const teamOptions = {
-        method: 'GET',
-        url: 'https://v2.nba.api-sports.io/teams',
+    const teamIds = [
+        1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16,
+        17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 38, 40, 41
+    ];
+    
 
-        headers: {
-            'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
-            'x-rapidapi-host': 'v2.nba.api-sports.io'
+    const getTeamData = async (teamId) => {
+
+        const teamOptions = {
+            method: 'GET',
+            url: 'https://v2.nba.api-sports.io/teams',
+
+            params: {id: teamId, league: 'standard'},
+
+            headers: { 'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+                'x-rapidapi-host': 'v2.nba.api-sports.io'
+            } 
         }
-    }
-
-
-    try {
 
         const response = await axios.request(teamOptions); 
-        const teamRes = response.data.response; 
+        const teamRes = response.data.response[0];
 
-        for (let i = 0; i < teamRes.length; i++) {
+        let results = []; 
+        
+        for (let j = 2015; j <= 2022; j++) {
 
-            if (teamRes[i].nbaFranchise && teamRes[i].id != 37) {
+            const season = j;  
 
-                //Basic Team Data: ------------------------------
+            const [roster, games, stats] = await Promise.all([
+                getTeamRoster(teamId, season),
+                getTeamGames(teamId, season),
+                getTeamStats(teamId, season)
+            ])
 
-                let teamData = {
-                    code: teamRes[i].code,
-                    name: teamRes[i].name,
+            const teamData = {
+                code: teamRes.code,
+                name: teamRes.name,
 
-                    nickname: teamRes[i].nickname,
-                    city: teamRes[i].city,
+                nickname: teamRes.nickname,
+                city: teamRes.city,
 
-                    conference: teamRes[i].leagues.standard.conference,
-                    division: teamRes[i].leagues.standard.division,
-                }
+                conference: teamRes.leagues.standard.conference,
+                division: teamRes.leagues.standard.division,
 
-                
-                for (let j = 2015; j <= 2022; j++) {
-
-                    //Advanced Seasonal Team Data: ------------------------------
-
-                    const teamId = teamRes[i].id;
-                    const season = j;  
-
-                    //Leagues => NBA => Seasons => Year (j) => Teams => teamID (i.id)
-                    const docRef = db.collection('Leagues')
-                    .doc('NBA').collection('Seasons').doc(j.toString())
-                    .collection('Teams').doc(teamRes[i].id.toString());
-                    
-                    //Get Seasonal Data:
-                    teamData['games'] = await getTeamGames(teamId, season); 
-                    teamData['stats'] = await getTeamStats(teamId, season); 
-                    teamData['roster'] = await getTeamRoster(teamId, season);
-                    teamData['standings'] = await getTeamStandings(
-                        teamId, season, 
-                        teamRes[i].leagues.standard.conference, teamRes[i].leagues.standard.division
-                    ); 
-
-                    batch.set(docRef, teamData); 
-                }
+                roster,
+                games,
+                stats
             }
 
-            await batch.commit();
+            //Leagues => NBA => Seasons => Year (j) => Teams => teamID (i.id)
+            const docRef = db
+            .collection('Leagues')
+            .doc('NBA')
+            .collection('Seasons')
+            .doc(season.toString())
+            .collection('Teams')
+            .doc(teamId.toString());
+            
+            results.push({docRef: docRef, teamData: teamData}); 
         }
 
-        //----------------------------------------------------------
-
-    } catch (error) {
-        functions.logger.error(error)
+        return results; 
     }
-    
+
+      
+    const processTeam = async (index) => {
+        const batch = admin.firestore().batch(); 
+
+        if (index >= teamIds.length) {
+            return; 
+        }
+
+        const teamId = teamIds[index]; 
+        const currentTeamObjects = await getTeamData(teamId); 
+
+        for (let i of currentTeamObjects) {
+            batch.set(i.docRef, i.teamData); 
+        }
+
+        await batch.commit();
+        await processTeam(index + 1); 
+    }
+
+
+    await processTeam(0); 
 })
+
 
