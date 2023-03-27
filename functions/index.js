@@ -250,7 +250,7 @@ const getTeamStandings = async(teamId, season, conference, division) => {
              
         } catch (error) {
 
-            retryAttempts++; 
+            retryAttempts += 1; 
         }
     }
 
@@ -320,8 +320,6 @@ exports.createNBATeams = functions.runWith ({
                 standings
             }
 
-            console.log(teamData.standings);
-
             //Leagues => NBA => Seasons => Year (j) => Teams => teamID (i.id)
             const docRef = db
             .collection('Leagues')
@@ -349,6 +347,7 @@ exports.createNBATeams = functions.runWith ({
         const currentTeamObjects = await getTeamData(teamId); 
 
         for (let i of currentTeamObjects) {
+            console.log(i.teamData);
             batch.set(i.docRef, i.teamData); 
         }
 

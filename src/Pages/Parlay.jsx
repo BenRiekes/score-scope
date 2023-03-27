@@ -24,6 +24,7 @@ import {
 //Modals
 import PrizeChart from "../Components/PrizeChart";
 import ScoringChart from "../Components/ScoringChart";
+import ParlayInstructions from "../Components/ParlayInstructions";
 
 //Test Functions:
 import { getNBATeamData, getTeamGames, getTeamRoster, getTeamStandings, getTeamStats } from "../Functions/APITest";
@@ -267,10 +268,10 @@ const Parlay = () => {
                             The Board:
                         </Heading>
 
-                        <Button color = 'white'>How 2 Play</Button>
-                        <PrizeChart />
+                        <ParlayInstructions />
                         <ScoringChart defaultIndex = {selectedLeague}/>
-                       
+                        <PrizeChart />
+                        
                     </ButtonGroup>
                                     
                     <ButtonGroup spacing = '5' size = 'sm'>
