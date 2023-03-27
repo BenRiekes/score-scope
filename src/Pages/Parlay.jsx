@@ -103,6 +103,40 @@ const Parlay = () => {
     
     //--------------------------------------------------------------------
 
+    const handleFilterChange = (filterName) => {
+
+        const prevIndex = parlayBoard[selectedLeague].filters.findIndex(
+            filter => filter.isActive === true
+        ); 
+
+        const newIndex = parlayBoard[selectedLeague].filters.findIndex(
+            filter => filter.name === filterName
+        ); 
+
+        if (prevIndex === newIndex) return; 
+
+        setParlayBoard(prev => {
+
+            const updatedFilters = [...prev[selectedLeague].filters]; 
+
+            updatedFilters[prevIndex] = {
+                ...updatedFilters[prevIndex], isActive: false
+            }; 
+
+            updatedFilters[newIndex] = {
+                ...updatedFilters[newIndex], isActive: true
+            };
+            
+            return {
+                ...prev, [selectedLeague]: {
+                    ...prev[selectedLeague], filters: updatedFilters
+                }
+            }
+        })
+    }
+
+    //--------------------------------------------------------------------
+
     const handleLeagueChange = (buttonName) => {
 
         //Check if league is current being offered
@@ -139,7 +173,10 @@ const Parlay = () => {
 
         if (prevIndex === newIndex) return; 
         
-        //Set state 
+        //Change the filter of the current button back to the 0th index: 
+        handleFilterChange(parlayBoard[selectedLeague].filters[0].name); 
+
+        //Set the league buttons: 
         setParlayBoard(prev => {
 
             const updatedButtons = [...prev.leagueButtons]; 
@@ -158,40 +195,7 @@ const Parlay = () => {
         setSelectedLeague(buttonName);
     }
 
-    //--------------------------------------------------------------------
-
-    const handleFilterChange = (filterName) => {
-
-        const prevIndex = parlayBoard[selectedLeague].filters.findIndex(
-            filter => filter.isActive === true
-        ); 
-
-        const newIndex = parlayBoard[selectedLeague].filters.findIndex(
-            filter => filter.name === filterName
-        ); 
-
-        if (prevIndex === newIndex) return; 
-
-        setParlayBoard(prev => {
-
-            const updatedFilters = [...prev[selectedLeague].filters]; 
-
-            updatedFilters[prevIndex] = {
-                ...updatedFilters[prevIndex], isActive: false
-            }; 
-
-            updatedFilters[newIndex] = {
-                ...updatedFilters[newIndex], isActive: true
-            };
-            
-            return {
-                ...prev, [selectedLeague]: {
-                    ...prev[selectedLeague], filters: updatedFilters
-                }
-            }
-        })
-    }
-
+    
     //--------------------------------------------------------------------
 
     const testDB = async () => {
