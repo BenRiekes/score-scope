@@ -12,21 +12,45 @@ const Wallet = require('ethereumjs-wallet').default
 
 exports.createUser = functions.https.onCall(async (data, context) => {
 
+    const profilePics = [
+        'https://firebasestorage.googleapis.com/v0/b/score-scope.appspot.com/o/imageAssets%2FmalePFP.png?alt=media&token=8c1854e0-f51e-472f-b503-b8ccd6f21304',
+        'https://firebasestorage.googleapis.com/v0/b/score-scope.appspot.com/o/imageAssets%2FfemalePFP.png?alt=media&token=dde802d1-9d76-4c89-b377-693965d3bae6',
+        'https://firebasestorage.googleapis.com/v0/b/score-scope.appspot.com/o/imageAssets%2FnbPFP.png?alt=media&token=f9eb28a4-7359-418c-b0f3-18986c45d266'
+    ]
+
     return new Promise (async (resolve, reject) => {
 
-        const createWallet = Wallet.generate(); 
+        const createWallet = Wallet.generate();
 
+        const getPFP = (genderVal) => {
+
+            switch (genderVal) {
+                case 'Male' :
+                    return profilePics[0];
+
+                case 'Female' :
+                    return profilePics[1]; 
+                
+                case 'Other' :
+                    return profilePics[2]; 
+
+                default: 
+                    return ''; 
+            }
+        }
+
+        //------------------------------------------------------------------
+ 
         //User data from form:
         const uid = context.auth.uid;  
         const email = data.email; 
         const username = data.username; 
         const age = data.age; 
         const gender = data.gender;
+        const pfp = getPFP(gender); 
 
-        //------------------------------------------------------------------
+        if (uid === undefined) reject ({isValid: false, reason: "No UID present"});
 
-        if (!uid) reject ({isValid: false, reason: "No UID present"});
-       
         //------------------------------------------------------------------
 
         await admin.firestore().collection('users').doc(uid).set ({
@@ -35,6 +59,7 @@ exports.createUser = functions.https.onCall(async (data, context) => {
             email: email,
             gender: gender,
             username: username,
+            pfp: pfp,
 
             friends: {
                 incoming: [],
