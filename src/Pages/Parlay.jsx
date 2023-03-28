@@ -13,7 +13,7 @@ import "./PageStyles/ParlayStyles.css";
 
 import { 
     HStack, Button, ButtonGroup, 
-    Heading, Flex, VStack, Box, useToast
+    Heading, Flex, VStack, Box, useToast, Divider, Grid, GridItem
 } from '@chakra-ui/react'; 
 
 import { 
@@ -100,7 +100,7 @@ const Parlay = () => {
         ], 
     }); 
 
-    
+  
     //--------------------------------------------------------------------
 
     const handleFilterChange = (filterName) => {
@@ -205,12 +205,6 @@ const Parlay = () => {
        console.log(res);
     }
 
-    const testAPI = async() => {
-
-        
-        const standings = await getTeamStandings(1, 2020, 'East', 'Southeast');
-        console.log(standings);
-    }
 
     return (
 
@@ -223,10 +217,6 @@ const Parlay = () => {
                     <Heading style = {{color: 'white'}}>Leagues:</Heading>
 
                     <Button onClick = {() => {
-                        testAPI();
-                    }}>Test API</Button>
-
-                    <Button onClick = {() => {
                         testDB();
                     }}>Test DB</Button>
 
@@ -236,6 +226,7 @@ const Parlay = () => {
                             <Button
                                 key = {button.name}
 
+                                size = 'lg'
                                 rightIcon = {<Icon path = {button.icon} size = {1} />}
                                 colorScheme = {selectedLeague === button.name ? 'purple' : 'whiteAlpha'}
 
@@ -248,16 +239,18 @@ const Parlay = () => {
                             </Button>
                         ) 
                     })}
+
                 </ButtonGroup>
 
             </HStack>
 
             <hr style = {{border: 'none', borderTop: '3px solid #2d2d2d'}}/>
             
+            
             <Box 
                 bg = '#2d2d2d'
                 borderRadius = 'md' 
-                style = {{ margin: '1.5%', padding: '.75%', width: '60%' }}
+                style = {{ margin: '1.5%', padding: '.75%', width: '70%' }}
             >
 
                 <VStack style = {{alignItems: 'flex-start', gap: '10px'}}>
@@ -267,6 +260,7 @@ const Parlay = () => {
                         size = 'lg' 
                         colorScheme = 'whiteAlpha' 
                         variant = 'link'
+
                     >
                         <Heading style = {{ color: 'white'}}>
                             The Board:
@@ -278,7 +272,9 @@ const Parlay = () => {
                         
                     </ButtonGroup>
                                     
-                    <ButtonGroup spacing = '5' size = 'sm'>
+                    <ButtonGroup spacing = '5' size = 'sm' maxW = '100%' 
+                        display = 'flex' flexWrap = 'wrap' 
+                    >
 
                         {parlayBoard[selectedLeague].filters.map((filter) => {
 
@@ -286,7 +282,7 @@ const Parlay = () => {
 
                                 <Button 
                                     key = {filter.name} 
-                                    borderRadius = 'xl' color = 'white'
+                                    borderRadius = 'xl' color = 'white' marginBottom = '5px'
 
                                     colorScheme = {filter.isActive ? 'purple' : 'whiteAlpha'} 
                                     variant = {filter.isActive ? 'solid' : 'outline'} 
@@ -302,8 +298,12 @@ const Parlay = () => {
 
                     </ButtonGroup>
 
+                    <Divider/>
+
+
                 </VStack>
 
+               
             </Box>
            
         </div>

@@ -161,33 +161,6 @@ const getTeamGames = async(teamId, season) => {
 
 //--------------------------------------------------------------------------------------------
 
-const getTeamStats = async(teamId, season) => {
-
-    const teamStatsOptions = {
-        method: 'GET',
-        url: 'https://v2.nba.api-sports.io/teams/statistics',
-
-        params: { id: teamId, season: season},
-        headers: {
-            'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
-            'x-rapidapi-host': 'v2.nba.api-sports.io'
-        }
-    }
-
-    try {
-        const response = await axios(teamStatsOptions); 
-        const statsRes = response.data.response; 
-
-        return statsRes[0]; 
-
-    } catch (error) {
-        console.log('team stats');
-        functions.logger.error(error); 
-    }
-}
-
-//--------------------------------------------------------------------------------------------
-
 const getTeamRoster = async(teamId, season) => {
 
     const teamRosterOptions = {
@@ -225,6 +198,34 @@ const getTeamRoster = async(teamId, season) => {
 
 //--------------------------------------------------------------------------------------------
 
+const getTeamStats = async(teamId, season) => {
+
+    const teamStatsOptions = {
+        method: 'GET',
+        url: 'https://v2.nba.api-sports.io/teams/statistics',
+
+        params: { id: teamId, season: season},
+        headers: {
+            'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+            'x-rapidapi-host': 'v2.nba.api-sports.io'
+        }
+    }
+
+    try {
+        const response = await axios(teamStatsOptions); 
+        const statsRes = response.data.response; 
+
+        return statsRes[0]; 
+
+    } catch (error) {
+        console.log('team stats');
+        functions.logger.error(error); 
+    }
+}
+
+
+//--------------------------------------------------------------------------------------------
+
 const getTeamStandings = async(teamId, season, conference, division) => {
 
     const teamStandingsOptions = {
@@ -244,7 +245,7 @@ const getTeamStandings = async(teamId, season, conference, division) => {
 
     let retryAttempts = 1; 
 
-    while (retryAttempts <= 3) {
+    while (retryAttempts <= 5) {
 
         try {
 
