@@ -311,7 +311,7 @@ const getPlayerIds = async () => {
             }
         }   
 
-        if (teamIndex === 41) { return results; } else { getPlayers(teamIndex + 1); } 
+        if (teamIds[teamIndex] === 41) { return results; } else { getPlayers(teamIndex + 1); } 
     }
    
     getPlayers(0); 
