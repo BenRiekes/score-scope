@@ -305,7 +305,8 @@ const getPlayerIds = async () => {
             for (let j = 0; j <= players.length; j++) {
 
                 if (hasBeenAdded[players[j]] !== true) {
-                    results.push(players[j]); 
+                    results.push(players[j]);
+                    hasBeenAdded[players[j]] = true;  
                 }
             }
         }   
