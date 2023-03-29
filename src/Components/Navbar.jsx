@@ -20,7 +20,7 @@ import {
 } from "@mdi/js";
 
 import { 
-    Button, ButtonGroup, Heading, Menu, Badge,
+    Button, ButtonGroup, Heading, Menu, Badge, Image,
     MenuButton, MenuList, MenuItem, useDisclosure, Divider, VStack, StackDivider
 } from "@chakra-ui/react";
 
@@ -55,7 +55,7 @@ export default function NavBar() {
     }, []);
 
     
-
+    const logo = 'https://firebasestorage.googleapis.com/v0/b/score-scope.appspot.com/o/imageAssets%2FScoreScopeLogo.svg?alt=media&token=bcda3c1d-acb7-4b5f-a87a-9fe2a551d59b'; 
     
     //------------------------------------------------------------------
 

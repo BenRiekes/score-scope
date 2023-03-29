@@ -285,6 +285,39 @@ const getTeamStandings = async(teamId, season, conference, division) => {
 
 //--------------------------------------------------------------------------------------------
 
+const getPlayerIds = async () => {
+
+    const teamIds = [
+        1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16,
+        17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 38, 40, 41
+    ];
+
+    let results = [];
+    let hasBeenAdded = {};
+    
+    const getPlayers = async (teamIndex) => {
+
+        for (let seasons = 2015; seasons <= 2022; seasons++) {
+
+            let players = await getTeamRoster(teamIds[teamIndex])
+            .map((returnObj) => returnObj['playerId']);
+
+            for (let j = 0; j <= players.length; j++) {
+
+                if (hasBeenAdded[players[j]] !== true) {
+                    results.push(players[j]); 
+                }
+            }
+        }   
+
+        if (teamIndex === 41) { return results; } else { getPlayers(teamIndex + 1); } 
+    }
+   
+    getPlayers(0); 
+}
+
+//--------------------------------------------------------------------------------------------
+
 exports.createNBATeams = functions.runWith ({
     timeoutSeconds: 540, maxInstances: 100, memory: '1GB' 
 
@@ -315,9 +348,7 @@ exports.createNBATeams = functions.runWith ({
 
         let results = []; 
         
-        for (let j = 2015; j <= 2022; j++) {
-
-            const season = j;  
+        for (let season = 2015; season <= 2022; j++) {  
 
             const [roster, games, stats, standings] = await Promise.all([
                 getTeamRoster(teamId, season),
@@ -387,4 +418,101 @@ exports.createNBATeams = functions.runWith ({
 
 //--------------------------------------------------------------------------------------------
 
+exports.createNBAPlayers = functions.runWith({
+    timeoutSeconds: 540, maxInstances: 100, memory: '1GB'
 
+}).https.onCall(async (data, context) => {
+
+   
+
+})
+
+/*
+    Players (1 doc per season | 7 docs total) |: 
+
+        - Where do you pull?: 
+
+            - Firebase Teams docs (name, id)
+        - 
+
+        - Fields to track: 
+
+            - Basic: 
+
+                - id (doc id); 
+                - first name 
+                - last name 
+                - team 
+
+                - games played that season
+            - 
+
+            - Advanced: 
+
+                - Season averages:
+                    -points
+                    -pos
+                    -min
+                    -fgm
+                    -fga
+                    -fgp
+                    -ftm
+                    -fta
+                    -ftp
+                    -tpm
+                    -tpa
+                    -tpp
+                    -offReb
+                    -defReb
+                    -totReb
+                    -assists
+                    -pFouls
+                    -steals
+                    -turnovers
+                    -blocks
+                    -plusMinus
+                - 
+
+                - Seaons averages against each team:
+                    - [Above, per team id]
+                    - win %
+                - 
+
+                - Season avergas on the road 
+                - Season average at home 
+
+                - games played: 
+                    - [Array of doc id s]
+                - 
+            - 
+        - 
+    - 
+*/
+
+
+/*
+    Games: 
+
+        - Home Team:
+            docId: name
+        - 
+        - Visitor Team
+
+        - Line Score: 
+            1st qtr => 4th qtr
+        - 
+
+        - Final score 
+
+        - Players played in game: 
+            
+            - home:
+                - player id: stats 
+            - 
+
+            - visitor:
+                - player id: stats 
+            - 
+        - 
+    - 
+*/
