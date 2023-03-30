@@ -29,7 +29,7 @@ import ParlayInstructions from "../Components/ParlayInstructions";
 //Test Functions:
 import { 
     getNBATeamData, getTeamGames, getTeamRoster,
-    getTeamStandings, getTeamStats, getPlayersFB, getPlayersAPI
+    getTeamStandings, getTeamStats, getPlayersFB
 } from "../Functions/APITest";
 
 const Parlay = () => {
@@ -209,7 +209,7 @@ const Parlay = () => {
     }
 
     const testAPI = async() => {
-        await getPlayersAPI();
+        await getPlayersFB();
     }
 
     return (

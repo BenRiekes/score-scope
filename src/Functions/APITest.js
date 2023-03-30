@@ -269,136 +269,65 @@ const getGameDetails = async(gameId) => {
 
 }
 
-
 export const getPlayersFB = async () => {
-
     const db = getFirestore(); 
+    const startTime = performance.now();
 
     const teamIds = [
         1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16,
         17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 38, 40, 41
     ];
 
-    const getPlayerIds = async (season) => {
+    //----------------------------------------------------
 
-        let results = []; 
-        let hasBeenAdded = {}; 
+    const getDocRefs = () => {
 
-        console.log(`Currently iterating through season:  ${season}`);
+        let docs = []; 
 
-        for (let i = 0; i < teamIds.length; i++) {
-
-            console.log(`Current fetching players from team: ${teamIds[i]}`); 
+        for (let i = 2015; i <= 2022; i++) {
 
             const collectionRef = collection(
-                db, 'Leagues', 'NBA', 'Seasons', season.toString(), 'Teams'
+                db, 'Leagues', 'NBA', 'Seasons', i.toString(), 'Teams'
             );
+    
+            for (let j = 0; j < teamIds.length; j++) { 
+    
+                const docRef = doc(
+                    collectionRef, teamIds[j].toString()
+                );
 
-            const docRef = doc(
-                collectionRef, teamIds[i].toString()
-            );
-            
-            const teamDoc = await getDoc(docRef);    
-
-            if (!teamDoc.exists()) {
-                continue; 
-            } 
-            
-            const teamPlayers = teamDoc.data().roster; 
-            
-            for (let j = 0; j < teamPlayers.length; j++) {
-
-                const currentPlayer = teamPlayers[j].playerId; 
-
-                if (hasBeenAdded[currentPlayer] !== true ) {
-
-                    hasBeenAdded[currentPlayer] = true; 
-                    results.push(currentPlayer);
-
-                } else { console.log (
-                    `Player: ${teamPlayers[j].playerId} has already been added`
-                )}
+                docs.push(docRef); 
             }
-
-            console.log(`Fetched all playerIds from team: ${teamIds[i]}`)
         }
 
-        if (season === 2022) {
+        return docs; 
+    }
+
+    const getPlayerIds = async () =>  {
+
+        const docRefs = getDocRefs(); 
+        const docRefPromises = docRefs.map(docRef => getDoc(docRef));
+
+        try {
+            const docSnapshots = await Promise.all(docRefPromises); 
+
+            //Get all player ids from the object roster field
+            const playerIds = docSnapshots.map (
+                docSnapshot => docSnapshot.data().roster
+
+            ).flat().map(object => object.playerId); 
+
+            const results = Array.from(new Set(playerIds)); //Takes out the duplicates
+            const endTime = performance.now()
+
             console.log(results);
-            return results; 
-        }
+            console.log(`${results.length} players have been added in ${endTime - startTime} milliseconds`);
+            return;  
 
-        await getPlayerIds(season += 1); 
+        } catch (error) {
+            console.log(error); 
+        }
     }
 
-    await getPlayerIds(2015); 
-} 
-
-//-------------------------------------------------------
-
-export const getPlayersAPI = async () => {
-
-    const startTime = performance.now();
-    
-    const teamIds = [
-        1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16,
-        17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 38, 40, 41
-    ];
-
-    let results = []; 
-    let hasBeenAdded = {}; 
-    
-    const getPlayerIds = async (season, teamIndex) => {
-
-        console.log(`Currently fetching team (${teamIds[teamIndex]}) for season (${season})`)
-
-        const playerOptions = {
-            method: 'GET',
-            url: 'https://v2.nba.api-sports.io/players',
-    
-            params: {
-                season: season, 
-                team: teamIds[teamIndex]
-            },
-    
-            headers: { 
-                'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
-                'x-rapidapi-host': 'v2.nba.api-sports.io'
-            } 
-        }
-        
-        const response = await axios.request(playerOptions); 
-        const playerRes = response.data.response; 
-
-        console.log(
-            `Player objects for team ${teamIds[teamIndex]} at season ${season} have been recieved`
-        ); 
-
-        const playerIds = playerRes.map(object => object.id);
-
-        for (let i = 0; i < playerIds.length; i++) {
-
-            if (hasBeenAdded[playerIds[i]] === undefined) { 
-
-                results.push(playerIds[i]); 
-                hasBeenAdded[playerIds[i]] = true;
-            } else { continue; }
-        }
-
-       
-        if (teamIndex  === teamIds.length - 1 && season === 2022) {
-            const endTime = performance.now();
-            console.log(`All ${results.length} player Ids have been fetched, it took ${endTime - startTime} milliseconds`);
-
-        } else if (teamIndex === teamIds.length - 1 && season !== 2022) {
-            await getPlayerIds(season += 1, 0)
-
-        } else if (teamIndex !== teamIds.length - 1) {
-            await getPlayerIds(season, teamIndex += 1); 
-        } 
-
-    }
-
-
-    getPlayerIds(2015, 0)
+    await getPlayerIds(); 
 }
