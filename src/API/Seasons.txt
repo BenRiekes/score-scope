@@ -1,5 +1,0 @@
-- Seasons:
-    - Get seasons
-        get("https://api-nba-v1.p.rapidapi.com/seasons");
-    -   
--

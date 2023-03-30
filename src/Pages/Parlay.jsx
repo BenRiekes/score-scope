@@ -27,7 +27,10 @@ import ScoringChart from "../Components/ScoringChart";
 import ParlayInstructions from "../Components/ParlayInstructions";
 
 //Test Functions:
-import { getNBATeamData, getTeamGames, getTeamRoster, getTeamStandings, getTeamStats } from "../Functions/APITest";
+import { 
+    getNBATeamData, getTeamGames, getTeamRoster,
+    getTeamStandings, getTeamStats, getPlayersFB, getPlayersAPI
+} from "../Functions/APITest";
 
 const Parlay = () => {
     const toast = useToast();
@@ -199,12 +202,15 @@ const Parlay = () => {
     //--------------------------------------------------------------------
 
     const testDB = async () => {
-       const createTeams = httpsCallable(getFunctions(), 'createNBATeams');
-       const res = await createTeams(); 
+       const createPlayers = httpsCallable(getFunctions(), 'createNBATeams');
+       const res = await createPlayers(); 
 
        console.log(res);
     }
 
+    const testAPI = async() => {
+        await getPlayersAPI();
+    }
 
     return (
 
@@ -219,6 +225,10 @@ const Parlay = () => {
                     <Button onClick = {() => {
                         testDB();
                     }}>Test DB</Button>
+
+                    <Button onClick = {() => {
+                        testAPI();
+                    }}>Test API</Button>
 
                     {parlayBoard.leagueButtons.map((button) => {
 

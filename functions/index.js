@@ -122,34 +122,32 @@ const getTeamGames = async(teamId, season) => {
         }; 
 
         const response = await axios(teamGameOptions);
-        const gameRes = response.data.response;
+        const gameRes = response.data.response[0];
 
         //--------------------------------------------------
 
-        for (let i = 0; i < gameRes.length; i++) {
+        const gameId = gameRes.id; 
+        const homeScore = gameRes.scores.home.points; 
+        const visitorScore = gameRes.scores.visitors.points;
+        const isHomeGame = gameRes.teams.home.id === teamId ? true : false; 
+        
+        let opponentId; 
+        
+        if (isHomeGame) {
+            opponentId = gameRes.teams.visitors.id;
 
-            const gameId = gameRes[i].id; 
-            const homeScore = gameRes[i].scores.home.points; 
-            const visitorScore = gameRes[i].scores.visitors.points;
-            const isHomeGame = gameRes[i].teams.home.id === teamId ? true : false; 
-            
-            let opponentId; 
-            
-            if (isHomeGame) {
-                opponentId = gameRes[i].teams.visitors.id;
+            homeScore > visitorScore 
+            ? games.homeWins.push({gameId: gameId, opponentId: opponentId}) 
+            : games.homeLosses.push({gameId: gameId, oponentId: opponentId})
 
-                homeScore > visitorScore 
-                ? games.homeWins.push({gameId: gameId, opponentId: opponentId}) 
-                : games.homeLosses.push({gameId: gameId, oponentId: opponentId})
+        } else if (!(isHomeGame)) {
+            opponentId = gameRes.teams.home.id; 
 
-            } else if (!(isHomeGame)) {
-                opponentId = gameRes[i].teams.home.id; 
-
-                homeScore < visitorScore 
-                ? games.awayWins.push({gameId: gameId, opponentId: opponentId}) 
-                : games.awayLosses.push({gameId: gameId, opponentId: opponentId})
-            }
+            homeScore < visitorScore 
+            ? games.awayWins.push({gameId: gameId, opponentId: opponentId}) 
+            : games.awayLosses.push({gameId: gameId, opponentId: opponentId})
         }
+    
 
         return games; 
 
@@ -157,6 +155,39 @@ const getTeamGames = async(teamId, season) => {
         console.log('team games');
         functions.logger.error(error); 
     }
+}
+
+//--------------------------------------------------------------------------------------------
+
+const getGameDetails = async(gameId) => {
+
+    const teamGameOptions = {
+        method: 'GET',
+        url: 'https://v2.nba.api-sports.io/games',
+
+        params: {id: gameId},
+
+        headers: {
+            'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+            'x-rapidapi-host': 'v2.nba.api-sports.io'
+        }
+    }
+
+    const response = await axios(teamGameOptions);
+    const gameRes = response.data.response[0];
+
+    const homeId = gameRes.teams.home.id
+    const visitorId = gameRes.teams.visitors.id
+
+    if (gameId !==  homeId || gameId !== visitorId) { 
+        return; 
+    } 
+
+    if (gameId === homeId) {
+        return ({home: true, opponent: visitorId}) 
+
+    } else { return ({home: false, opponent: homeId}) }
+
 }
 
 //--------------------------------------------------------------------------------------------
@@ -299,24 +330,149 @@ const getPlayerIds = async () => {
 
         for (let seasons = 2015; seasons <= 2022; seasons++) {
 
-            let players = await getTeamRoster(teamIds[teamIndex])
-            .map((returnObj) => returnObj['playerId']);
+            //Extracting playerIds out of objects return from func
+            let players = await getTeamRoster(teamIds[teamIndex]); 
+            
+            for (let j = 0; j < players.length; j++) {
 
-            for (let j = 0; j <= players.length; j++) {
+                const currentPlayer = players[j]; 
 
-                if (hasBeenAdded[players[j]] !== true) {
-                    results.push(players[j]);
-                    hasBeenAdded[players[j]] = true;  
+                if (hasBeenAdded[currentPlayer.playerId] !== true) {
+                    
+                    results.push(currentPlayer.playerId);
+                    hasBeenAdded[currentPlayer.playerId] = true;  
                 }
             }
         }   
 
-        if (teamIds[teamIndex] === 41) { return results; } else { getPlayers(teamIndex + 1); } 
+        if (teamIds[teamIndex] === 41) { return results; } else { await getPlayers(teamIndex + 1); } 
     }
    
     getPlayers(0); 
 }
 
+//--------------------------------------------------------------------------------------------
+
+const getPlayerStats = async (playerId, season) => {
+
+    const playerStatsOptions = {
+        method: 'GET',
+        url: 'https://v2.nba.api-sports.io/teams/statistics',
+
+        params: {id: playerId, season: season},
+
+        headers: { 'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+            'x-rapidapi-host': 'v2.nba.api-sports.io'
+        } 
+    }
+
+    //-----------------------------------------------------------
+
+
+    const handleTypeCast = (val) => {
+
+        if (typeof val === 'number') {
+            val = val + 0.0; 
+
+        } else if (val.includes(':')) {
+            val = val.replace(':', '.');
+        } 
+
+        return parseFloat(val); 
+    }
+
+    //-----------------------------------------------------------
+
+    let results = {};
+    let teamTotals = {};  
+    let homeCount = 0; 
+    let awayCount = 0; 
+
+    const playerStats = await axios.get(playerStatsOptions); 
+    const playerStatsRes = playerStats.data.response; 
+
+    playerStatsRes.forEach(async (object) => {
+
+        const currentGame = object.game.id;
+        const gameDetails = await getGameDetails(currentGame);
+
+        const isHomeGame = gameDetails.home; 
+        const opponentId = gameDetails.opponent;
+        let dynamicKey; 
+
+        if (isHomeGame) {
+            dynamicKey = 'homeAvg'; homeCount += 1; 
+
+        } else { 
+            dynamicKey = 'awayAvg'; awayCount += 1; 
+        }
+
+        for (let key in object) {
+
+            const dontCast = { 'player': true, 'comment': true,
+             'team': true, 'game': true,
+            }
+
+            if (dontCast[key] === true) {
+                continue; 
+            }
+
+            const currentVal = handleTypeCast(object[key]); 
+
+            //Set if 0th index
+            if (playerStatsRes[0].game.id === currentGame) {
+                results['seasonAvg'][key] = currentVal;
+                results[dynamicKey][key] = currentVal; 
+                results['vsTeam'][opponentId][key] = currentVal; 
+                
+            } else { //add sum otherwise
+                results['seasonAvg'][key] += currentVal;
+                results[dynamicKey][key] += currentVal; 
+                results['vsTeam'][opponentId][key] += currentVal; 
+            }
+            
+            teamTotals[opponentId] += 1; 
+        }
+    
+    });
+
+    //-----------------------------------------------------------
+
+    const resultKeys = ['seasonAvg', 'homeAvg', 'awayAvg', 'vsTeam']; 
+
+    for (let i = 0; i < resultKeys.length; i++) {
+
+        for (let key in results[resultKeys[i]]) {
+
+            const current = results[resultKeys[i]][key]; 
+
+            switch (resultKeys[i]) {
+
+                case 'seasonAvg' :
+                    results[resultKeys[i]][key] = current / homeCount + awayCount; 
+                    break; 
+                
+                case 'homeAvg' :
+                    results[resultKeys[i]][key] = current / homeCount; 
+                    break; 
+
+                case 'awayAvg' :
+                    results[resultKeys[i]][key] = current / awayCount;
+                    break; 
+
+                case 'vsTeam' : //Key is opponent id in this case
+                    results[resultKeys[i]][key] = results[resultKeys[i]][key] / teamTotals[key];
+                    break; 
+
+                default: 
+                    break; 
+            }   
+            
+        }
+    }
+
+    return results; 
+}
 //--------------------------------------------------------------------------------------------
 
 exports.createNBATeams = functions.runWith ({
@@ -329,6 +485,7 @@ exports.createNBATeams = functions.runWith ({
         17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 38, 40, 41
     ];
     
+    //--------------------------------------
 
     const getTeamData = async (teamId) => {
 
@@ -349,7 +506,7 @@ exports.createNBATeams = functions.runWith ({
 
         let results = []; 
         
-        for (let season = 2015; season <= 2022; j++) {  
+        for (let season = 2015; season <= 2022; season++) {  
 
             const [roster, games, stats, standings] = await Promise.all([
                 getTeamRoster(teamId, season),
@@ -393,6 +550,7 @@ exports.createNBATeams = functions.runWith ({
         return results; 
     }
 
+    //--------------------------------------
       
     const processTeam = async (index) => {
         const batch = admin.firestore().batch(); 
@@ -424,96 +582,85 @@ exports.createNBAPlayers = functions.runWith({
 
 }).https.onCall(async (data, context) => {
 
-   
+    const playerIds = await getPlayerIds();
+    
+    const getPlayerData = async(playerId) => {
 
+        const playerOptions = {
+            method: 'GET',
+            url: 'https://v2.nba.api-sports.io/players',
+
+            params: {id: playerId},
+
+            headers: { 'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+                'x-rapidapi-host': 'v2.nba.api-sports.io'
+            } 
+        }
+        
+        //name, weight, college, ect..
+        const player = await axios.request(playerOptions);
+        const playerRes = player.data.response[0];
+
+        let results = []; 
+
+        for (let season = 2015; season <= 2022; season++) {
+
+            const playerStats = await getPlayerStats(playerId, season); 
+
+            const playerData = {
+
+                //Basic Data: ----------------------------------------
+                firstName: playerRes.firsname,
+                lastName: playerRes.lastName,
+                birth: playerRes.birth,
+
+                height: playerRes.height,
+                weight: playerRes.weight,
+
+                college: playerRes.college + ' ' + playerRes.affiliation,
+                position: playerRes.leagues.standard.pos,
+                //------------------------------------------------------
+
+                seasonAvg: playerStats.seasonAvg,
+                homeAvg: playerStats.homeAvg,
+                awayAvg: playerStats.awayAvg,
+
+                vsTeam: playerStats.vsTeam
+            }
+
+            const docRef = db
+            .collection('Leagues')
+            .doc('NBA')
+            .collection('Seasons')
+            .doc(season.toString())
+            .collection('Players')
+            .doc(playerId.toString());
+            
+            results.push({docRef: docRef, teamData: playerData});
+        }
+
+        return results; 
+    }
+
+    const processPlayer = async(playerIndex) => {
+        const batch = admin.firestore().batch(); 
+
+        if (playerIndex >= playerIds.length) {
+            return; 
+        } 
+
+        const playerId = playerIds[playerIndex];
+        const currentPlayerObjects = await getPlayerData(playerId); 
+        
+        for (let i of currentPlayerObjects) {
+            console.log(i.playerData);
+            batch.set(i.docRef, i.playerData); 
+        }
+
+        await batch.commit(); 
+        await processPlayer(playerIndex + 1); 
+    }
+
+    await processPlayer(0); 
 })
 
-/*
-    Players (1 doc per season | 7 docs total) |: 
-
-        - Where do you pull?: 
-
-            - Firebase Teams docs (name, id)
-        - 
-
-        - Fields to track: 
-
-            - Basic: 
-
-                - id (doc id); 
-                - first name 
-                - last name 
-                - team 
-
-                - games played that season
-            - 
-
-            - Advanced: 
-
-                - Season averages:
-                    -points
-                    -pos
-                    -min
-                    -fgm
-                    -fga
-                    -fgp
-                    -ftm
-                    -fta
-                    -ftp
-                    -tpm
-                    -tpa
-                    -tpp
-                    -offReb
-                    -defReb
-                    -totReb
-                    -assists
-                    -pFouls
-                    -steals
-                    -turnovers
-                    -blocks
-                    -plusMinus
-                - 
-
-                - Seaons averages against each team:
-                    - [Above, per team id]
-                    - win %
-                - 
-
-                - Season avergas on the road 
-                - Season average at home 
-
-                - games played: 
-                    - [Array of doc id s]
-                - 
-            - 
-        - 
-    - 
-*/
-
-
-/*
-    Games: 
-
-        - Home Team:
-            docId: name
-        - 
-        - Visitor Team
-
-        - Line Score: 
-            1st qtr => 4th qtr
-        - 
-
-        - Final score 
-
-        - Players played in game: 
-            
-            - home:
-                - player id: stats 
-            - 
-
-            - visitor:
-                - player id: stats 
-            - 
-        - 
-    - 
-*/

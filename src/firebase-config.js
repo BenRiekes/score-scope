@@ -21,11 +21,11 @@ const firebaseConfig = {
 }
 
 //Initialize Firebase:
-export const app = initializeApp(firebaseConfig)
-export const auth = getAuth(app)
-export const db = getFirestore(app)
-export const functions = getFunctions(app)
-export const storage = getFunctions(app)
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const functions = getFunctions(app);
+export const storage = getFunctions(app);
 
 //Initialize Emulators:
 connectAuthEmulator(auth, 'http://127.0.0.1:9099')
