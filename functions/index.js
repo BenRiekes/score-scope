@@ -7,6 +7,7 @@ admin.initializeApp();
 const db = admin.firestore();
 
 const axios = require("axios"); 
+const Bottleneck = require("bottleneck"); 
 const Wallet = require('ethereumjs-wallet').default
 
 
@@ -96,6 +97,13 @@ exports.createUser = functions.https.onCall(async (data, context) => {
     })
 }); 
 
+// ------------------------------------------------------------------------------------
+
+const limiter = new Bottleneck({
+    minTime: 200,
+}); 
+
+//Get Teams Helper Functions: ----------------------------------------------------------
 
 const getBasicData = async (teamId) => {
 
@@ -157,7 +165,7 @@ const getTeamRoster = async (teamId) => {
     //------------------------------------------------------------
 
     const requests = getAxiosRequests(); 
-    const rosterPromises = requests.map(req => axios.request(req));
+    const rosterPromises = requests.map((req) => limiter.schedule(() => axios.request(req)));
 
     try {
         const teamRosters = await Promise.all(rosterPromises);
@@ -167,7 +175,7 @@ const getTeamRoster = async (teamId) => {
 
             const key = 2015 + i;
             const playersArr = []; 
-            const playersRes = teamRosters[i].data.response; 
+            let playersRes = teamRosters[i].data.response; 
 
             for (let j = 0; j < playersRes.length; j++) {
 
@@ -188,7 +196,6 @@ const getTeamRoster = async (teamId) => {
     
 }
 
-//--------------------------------------------------------------------------------------------
 
 //Gets all gameIDs and some basic info for seasons 2015 => 2022 from API: 1.14 seconds 
 const getTeamGames = async (teamId) => {
@@ -224,7 +231,7 @@ const getTeamGames = async (teamId) => {
     //------------------------------------------------------------
 
     const requests = getAxiosRequests(); 
-    const gamePromises = requests.map(req => axios.request(req)); 
+    const gamePromises = requests.map((req) => limiter.schedule(() => axios.request(req)));
 
     try {
 
@@ -272,7 +279,6 @@ const getTeamGames = async (teamId) => {
     }
 }
 
-//--------------------------------------------------------------------------------------------
 
 //Gets all seasons stats from seasons 2015 => 2022 from API: 0.8 seconds
 const getTeamStats = async (teamId) => {
@@ -309,7 +315,7 @@ const getTeamStats = async (teamId) => {
     //-----------------------------------------------------------------
 
     const requests = getAxiosRequests(); 
-    const statsPromises = requests.map(req => axios.request(req)); 
+    const statsPromises = requests.map((req) => limiter.schedule(() => axios.request(req)));
 
     try {   
         const teamStats = await Promise.all(statsPromises); 
@@ -335,7 +341,6 @@ const getTeamStats = async (teamId) => {
 
 }
 
-//--------------------------------------------------------------------------------------------
 
 //Get seasons standings for team | 2018 => 2022 from API: 1.2 seconds
 const getTeamStandings = async (teamId) => {
@@ -370,7 +375,7 @@ const getTeamStandings = async (teamId) => {
     }
 
     const requests = getAxiosRequests(); 
-    const standingsPromises = requests.map(req => axios.request(req));  
+    const standingsPromises = requests.map((req) => limiter.schedule(() => axios.request(req))); 
 
 
     try {
@@ -408,8 +413,7 @@ const getTeamStandings = async (teamId) => {
     }
 }
 
-
-//--------------------------------------------------------------------------------------------
+//Get Players Helper Functions ------------------------------------------------------------------------------------
 
 
 exports.createNBATeams = functions.runWith ({
@@ -491,7 +495,6 @@ exports.createNBATeams = functions.runWith ({
 
     } catch (error) { functions.logger.error(error); }
     
-
 })
 
 //--------------------------------------------------------------------------------------------
