@@ -197,6 +197,54 @@ const getTeamRoster = async (teamId) => {
 }
 
 
+//Gets all player IDs: team x, season x, firestore query:
+const getTeamRosterBySeason = async (season) => {
+
+    const teamIds = [ 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16,
+        17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 38, 40, 41
+    ];
+
+    const getDocRefs = () => {
+
+        let docRefs = []; 
+
+        for (let i = 0; i < teamIds.length; i++) {
+
+            const docRef = db
+            .collection('Leagues').doc('NBA')
+            .collection('Seasons').doc(season.toString())
+            .collection('Teams').doc(teamIds[i].toString()); 
+
+            docRefs.push(docRef); 
+        }
+
+        return docRefs; 
+    }
+
+    const docRefs = getDocRefs(); 
+    const docRefPromises = docRefs.map(docRef => getDoc(docRef));
+
+    try {
+
+        let results = []; 
+        const docSnapshots = await Promise.all(docRefPromises);
+
+        for (const doc of docSnapshots) {
+
+            const roster = doc.data().roster; 
+            const playerIds = roster.map(object => object.playerId); 
+
+            results.push({teamId: doc.id, teamRoster: playerIds});  
+        }
+
+        return results; 
+
+    } catch (error) {
+        functions.logger.error(error); 
+    }
+
+}
+
 //Gets all gameIDs and some basic info for seasons 2015 => 2022 from API: 1.14 seconds 
 const getTeamGames = async (teamId) => {
 
@@ -415,6 +463,129 @@ const getTeamStandings = async (teamId) => {
 
 //Get Players Helper Functions ------------------------------------------------------------------------------------
 
+//Get the opponent of a game:
+const getGameOpponents = async (season, teamId) => {
+
+    let results = {};  
+
+    const requestObj = {
+
+        method: 'GET',
+        url: 'https://v2.nba.api-sports.io/games',
+
+        params: { 
+            league: 'standard', season: season, team: teamId
+        },
+
+        headers: {
+            'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+            'x-rapidapi-host': 'v2.nba.api-sports.io'
+        }
+    }
+
+    const gamesRequests = await axios.request(requestObj); 
+    const gamesRes = gamesRequests.data.response; 
+    
+    for (const game of gamesRes) { 
+
+        const visitorId = game.teams.visitors.id; 
+        const homeId = game.teams.home.id; 
+
+        const opponentId = homeId === teamId ? homeId : visitorId; 
+
+        results[game.id] = opponentId; 
+    }
+
+    return results; 
+}
+
+//Get Play averges for season and against each team
+const getPlayerStats = async (playerIds, teamId, season) => {
+
+    const getAxiosRequests = () => {
+
+        let requestObjects = []; 
+
+        const requestObj = {
+            method: 'GET',
+            url: 'https://v2.nba.api-sports.io/players/statistics',
+    
+            params: { 
+               id: null, season: season, team: teamId
+            },
+
+            headers: {
+                'x-rapidapi-key': '44811944fb9e22b829652e29b0ebf621',
+                'x-rapidapi-host': 'v2.nba.api-sports.io'
+            }
+        }
+
+        for (let i = 0; i < playerIds.length; i++) {
+
+            const objCopy = JSON.parse(JSON.stringify(requestObj)); 
+
+            objCopy.params.id = playerIds[i]; 
+            requestObjects.push(objCopy);
+        }
+
+        return requestObjects; 
+    }
+
+    
+    const requests = getAxiosRequests(); 
+    const playerStatsPromises = requests.map((req) => limiter.schedule(() => axios.request(req)));
+     
+    try {       
+        const playerStats = await Promise.all(playerStatsPromises);
+
+        let playerGames = {}; 
+        
+        for (let i = 0; i < playerStats.length; i++) {  //All of the responses for the playerIds array
+
+            //Single response with the returned promises
+            const playerStatsRes = playerStats[i].data.response;
+            const playerId = playerStats[i].data.response[0].player.id;  
+
+            let playerGameStats = [];
+            
+            //For each game handle stats 
+            playerStatsRes.forEach(game => { 
+                
+                playerGameStats.push(
+                    { 
+                        gameId: game.game.id,
+
+                        stats: {
+                            min: game.min, points: game.points, fgm: game.fgm, 
+                            fga: game.fga, fgp: game.fgp, ftm: game.ftm, 
+                            fta: game.fta, ftp: game.ftp, tpm: game.tpm,
+                            tpa: game.tpa, tpp: game.tpp, offReb: game.offReb,
+                            defReb: game.defReb, totReb: game.totReb, assists: game.assist,
+                            pFouls: game.pFouls, steals: game.steals, turnovers: game.turnovers,
+                            blocks: game.blocks, plusMinus: game.plusMinus,
+                            comment: game.comment == null ? 'No Comment' : game.comment
+                        }
+                    }
+                ); 
+            }); 
+ 
+            playerGames[playerId] = playerGameStats; //{playerId: [{}, {}]}
+        }
+
+        //--------------------------------------------------------------------------------
+
+        for (let i = 0; i < playerIds.length; i++) {
+
+            
+        }
+        
+
+    } catch (error) {
+        functions.logger.error(error); 
+    }
+}
+
+//--------------------------------------------------------------------------------------------
 
 exports.createNBATeams = functions.runWith ({
     timeoutSeconds: 540, maxInstances: 100, memory: '1GB' 
@@ -486,8 +657,6 @@ exports.createNBATeams = functions.runWith ({
                 batch.set(j.docRef, j.teamData); 
                 console.log(`The ${j.teamData.city + ' ' + j.teamData.nickname}'s data has been set!`);               
             }
-    
-            
         }
 
         await batch.commit(); const endTime = performance.now();  const time = endTime - startTime / 1000
@@ -499,4 +668,86 @@ exports.createNBATeams = functions.runWith ({
 
 //--------------------------------------------------------------------------------------------
 
-            
+exports.createNBAPlayers = functions.runWith ({
+    timeoutSeconds: 540, maxInstances: 100, memory: '1GB' 
+
+}).https.onCall(async (data, context) => { 
+
+    const getPlayerData = async (playerIds, teamId, season) => {
+
+        let results = []; 
+
+        try {
+
+            for (let i = 0; i < playerIds.length; i++) {
+
+                const playerData = {
+                    firstName: '',
+                    lastName: '', 
+
+                    birth: {
+                        date: '',
+                        country: ''
+                    }, 
+
+                    physical: {
+
+                        height: {
+                            feet: '',
+                            inches: '',
+                            meters: ''
+                        }, 
+
+                        weight: {
+                            pounds: '',
+                            kilograms: ''
+                        },
+                    }, 
+
+                    career: {
+
+                        college: {
+                            school: '',
+                            affiliation: ''
+                        },
+
+                        nba: {
+                            start: '',
+                            pro: '',
+                            position: ''
+                        }
+                    },    
+                }
+
+                const docRef = db.collection('Leagues')
+                .doc('NBA').collection('Seasons').doc(season.toString())
+                .collection('Players').doc(playerIds[i].toString());
+
+                results.push({docRef: docRef, playerData: playerData}); 
+            }
+
+
+        } catch (error) {
+            functions.logger.error(error); 
+        }
+    }
+
+    //---------------------------------------------------------------------
+
+    
+    const processPlayer = async (season) => {
+
+        try { const batch = admin.firestore().batch(); 
+
+            //Hashmap of teamIds: teamPlayers[id, id , id]
+            const players = await getTeamRosterBySeason(season); 
+
+
+
+        } catch (error) {
+            functions.logger.error(error); 
+        }
+    }
+
+    await processPlayer(2015); 
+})            

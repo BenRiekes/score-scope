@@ -9,6 +9,7 @@ import { getFirestore, getDoc, doc, getDocs, collection } from "firebase/firesto
 
 //OPTIMIZED FUNCTIONS: ==================================================================
 
+
 //Gets all player IDs from firestore: 1.9 seconds
 export const getPlayerIds = async () => { 
     const db = getFirestore(); 
